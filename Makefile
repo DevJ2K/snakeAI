@@ -29,7 +29,7 @@ pytest:
 		@python3 -m pytest tests/*.py -v
 
 clean:
-		rm -rf __pycache__ .pytest_cache
+		rm -rf __pycache__ tests/__pycache__ srcs/__pycache__ .pytest_cache
 
 test: norm pytest
 
