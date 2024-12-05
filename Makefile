@@ -22,6 +22,10 @@ norm:
 		@echo "$(CYAN)######## NORM - Flake8 $(DEF_COLOR)"
 		@python3 -m flake8 srcs/*
 
+path:
+# export PATH=$$PWD:$$PATH
+		export PYTHONPATH=$$PWD:$$PATH
+# export PATH=$$PWD
 
 pytest:
 		@echo "$(GREEN)########################################"
