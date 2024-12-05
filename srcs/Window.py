@@ -26,14 +26,19 @@ class Window:
         self.theme = theme.get()
 
     def launch(self):
+        # i = 0
         while self.exit == False:
             self.create_background(pattern_size=64)
+            # print(i)
+            # i += 1
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.exit = True
-            pass
-        pass
+                if event.type == pygame.KEYDOWN:
+                    print(event.dict)
+
+            self.main_menu()
 
     def create_background(self, pattern_size: int = 24):
         pattern_bool = 0
@@ -61,12 +66,16 @@ class Window:
             }
         )
 
+
+    def main_menu(self):
+        self.add_button(
+            text="PLAY",
+            background="#FFFFFF"
+        )
+
+
     def add_text(self, text: str, x: int = None, y: int = None, color: str = "#FFFFFF", shadow: dict = None):
         text_render = self.fontTitle.render(text, True, color)
-        if shadow:
-            text_shadow = self.fontTitle.render(text, True, shadow['color'])
-            text_shadow.set_alpha(shadow['opacity'])
-
         x_coord = x
         y_coord = y
 
@@ -83,6 +92,25 @@ class Window:
             text_shadow = self.fontTitle.render(text, True, shadow['color'])
             text_shadow.set_alpha(shadow['opacity'])
             self.canvas.blit(text_shadow, [x_coord + shadow['x'], y_coord + shadow['y']])
+        self.canvas.blit(text_render, [x_coord, y_coord])
+
+    def add_button(self, text: str, x: int = None, y: int = None, color: str = "#FFFFFF", background: str = "#000000", stroke: str = "#FFFFFF"):
+
+        text_render = self.fontTitle.render(text, True, color)
+        x_coord = x
+        y_coord = y
+
+        text_rect = text_render.get_rect()
+        if x == None and y == None:
+            x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
+            y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
+        elif x == None:
+            x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
+        elif y == None:
+            y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
+
+        # rectangle = pygame.draw.rect(self.canvas, background, pygame.Rect(x_coord, y_coord, text_rect.width, text_rect.height), 16)
+
         self.canvas.blit(text_render, [x_coord, y_coord])
 
 if __name__ == "__main__":
