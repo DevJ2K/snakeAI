@@ -3,6 +3,7 @@ import pygame.gfxdraw
 from WindowTheme import WindowTheme
 # from utils.Colors import *
 from utils.pygame_utils import draw_bordered_rounded_rect
+from utils import my_cursors
 import os
 
 
@@ -67,17 +68,38 @@ class Window:
         #     "func": func
         # }
         # test: pygame.Rect = draw_bordered_rounded_rect()
+        final_hover = False
         for button in self.buttons:
+            hover = False
             if button['hitbox'].collidepoint(pos):
                 cursor_color = self.canvas.get_at(pygame.mouse.get_pos())
                 color_list = [
-                    pygame.Color(button['color']),
-                    pygame.Color(button['bg_color']),
-                    pygame.Color(button['stroke'])
+                    pygame.Color(self.theme['bg1']),
+                    pygame.Color(self.theme['bg2'])
                 ]
-                if cursor_color in color_list:
-                    print(f"Collisions with {button['text']}")
-        pass
+                if cursor_color not in color_list:
+                    # print(f"Collisions with {button['text']}")
+                    hover = True
+                    final_hover = True
+
+            self.add_button(
+                button['text'],
+                button['x'],
+                button['y'],
+                button['color'],
+                button['bg_default'],
+                button['bg_hover'],
+                button['stroke'],
+                button['func'],
+                hover,
+                False,
+            )
+        if final_hover:
+            # pygame.mouse.set_cursor(pygame.cursors.tri_left)
+            hover_cursor = pygame.cursors.compile(my_cursors.hover_strings)
+            pygame.mouse.set_cursor((24, 16), (0, 0), *hover_cursor)
+        else:
+            pygame.mouse.set_cursor(pygame.cursors.arrow)
 
     def create_background(self, pattern_size: int = 24):
         pattern_bool = 0
@@ -112,12 +134,14 @@ class Window:
         self.add_button(
             text="PLAY",
             y=self.SCREEN_HEIGHT / 2 - 140,
-            bg_color="#0000FF"
+            bg_default="#0000FF",
+            bg_hover="#000097",
         )
         self.add_button(
             text="LEAVE",
             y=self.SCREEN_HEIGHT / 2,
-            bg_color="#0000FF"
+            bg_default="#0000FF",
+            bg_hover="#000097",
         )
 
     def add_text(
@@ -155,9 +179,11 @@ class Window:
             x: int = None,
             y: int = None,
             color: str = "#FFFFFF",
-            bg_color: str = "#000000",
+            bg_default: str = "#000000",
+            bg_hover: str = "#4F4F4F",
             stroke: str = "#FFFFFF",
             func: callable = print,
+            hover: bool = False,
             append: bool = True
     ):
 
@@ -168,6 +194,7 @@ class Window:
         x_coord = x
         y_coord = y
 
+        bg_color = bg_hover if hover is True else bg_default
         text_rect = text_render.get_rect()
         if x is None and y is None:
             x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
@@ -210,7 +237,8 @@ class Window:
                     "x": x,
                     "y": y,
                     "color": color,
-                    "bg_color": bg_color,
+                    "bg_default": bg_default,
+                    "bg_hover": bg_hover,
                     "stroke": stroke,
                     "hitbox": button_rect,
                     "func": func
