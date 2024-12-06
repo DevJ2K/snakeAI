@@ -1,5 +1,6 @@
 from srcs.SnakeNode import SnakeNode
 from utils.Colors import *
+import random
 
 class SnakeError(Exception):
     pass
@@ -21,6 +22,18 @@ class Snake:
         self.RED_APPLE = {'char': 'R', 'color': REDHB}
         self.EMPTY_SPACE = {'char': '0', 'color': BLACKB}
 
+        self.UP = (-1, 0)
+        self.DOWN = (1, 0)
+        self.LEFT = (0, -1)
+        self.RIGHT = (0, 1)
+
+        self.directions = [
+            self.UP,
+            self.DOWN,
+            self.LEFT,
+            self.RIGHT,
+        ]
+
         self.all_items = [
             self.WALL,
             self.HEAD,
@@ -31,9 +44,15 @@ class Snake:
         ]
 
         self.size = size
+        self.snake_length = snake_length
 
         self.board: list[list[str]] = self.__create_board()
-        self.snake: list[SnakeNode] = []
+        self.snake: list[SnakeNode] = self.__get_snake()
+
+        self.__place_snake()
+
+        # self.direction = None
+
 
     def __create_board(self) -> list[list[str]]:
         board = [[self.EMPTY_SPACE['char'] for _ in range(self.size)] for __ in range(self.size)]
@@ -44,9 +63,30 @@ class Snake:
         board.append([self.WALL['char'] for _ in range(self.size + 2)])
         return board
 
-    def place_snake(self):
+    def __get_snake(self):
+        nodes: list[SnakeNode] = []
+        random_i = random.randint(self.snake_length, self.size - (self.snake_length - 1))
+        random_j = random.randint(self.snake_length, self.size - (self.snake_length - 1))
+
+        nodes.append(SnakeNode((random_i, random_j), random.choice(self.directions), True))
+
+        for i in range(1, self.snake_length):
+            self.add_snake_node()
+        return nodes
+
+    def __place_snake(self):
+        for node in self.snake:
+            if node.head:
+                self.board[node.i][node.j] = self.HEAD['char']
+            else:
+                self.board[node.i][node.j] = self.SNAKE_BODY['char']
+
+    def add_snake_node(self):
+        
         pass
 
+    def update_snake_nodes(self):
+        pass
 
     def get_item_by_char(self, char: str) -> dict | None:
         for item in self.all_items:
@@ -71,7 +111,6 @@ class Snake:
 if __name__ == "__main__":
     from pprint import pprint
     snake = Snake(size=10, snake_length=3)
-    # snake.display_board(False)
-    pprint(snake.board)
+    snake.display_board(False)
 
     pass
