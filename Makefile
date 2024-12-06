@@ -1,4 +1,8 @@
 ########################################
+########## VARIABLES
+DIRECTORY = srcs utils tests
+
+########################################
 ########## COLORS
 DEF_COLOR = \033[0;39m
 GRAY = \033[1;90m
@@ -20,11 +24,11 @@ all:
 norm:
 		@echo "$(CYAN)########################################"
 		@echo "$(CYAN)######## NORM - Flake8 $(DEF_COLOR)"
-		@python3 -m flake8 srcs/*
+		@python3 -m flake8 $(DIRECTORY)
 
 path:
 # export PATH=$$PWD:$$PATH
-		export PYTHONPATH=$$PWD:$$PATH
+		chmod +x script.sh && ./script.sh
 # export PATH=$$PWD
 
 pytest:

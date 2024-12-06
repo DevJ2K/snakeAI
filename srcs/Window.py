@@ -1,65 +1,10 @@
 import pygame
 import pygame.gfxdraw
 from WindowTheme import WindowTheme
-from utils.Colors import *
+# from utils.Colors import *
+from utils.pygame_utils import draw_bordered_rounded_rect
 import os
-import pygame.gfxdraw
 
-def draw_rounded_rect(surface, rect, color, corner_radius):
-    ''' Draw a rectangle with rounded corners.
-    Would prefer this:
-        pygame.draw.rect(surface, color, rect, border_radius=corner_radius)
-    but this option is not yet supported in my version of pygame so do it ourselves.
-
-    We use anti-aliased circles to make the corners smoother
-    '''
-    if rect.width < 2 * corner_radius or rect.height < 2 * corner_radius:
-        raise ValueError(f"Both height (rect.height) and width (rect.width) must be > 2 * corner radius ({corner_radius})")
-
-    # need to use anti aliasing circle drawing routines to smooth the corners
-    pygame.gfxdraw.aacircle(surface, rect.left+corner_radius, rect.top+corner_radius, corner_radius, color)
-    pygame.gfxdraw.aacircle(surface, rect.right-corner_radius-1, rect.top+corner_radius, corner_radius, color)
-    pygame.gfxdraw.aacircle(surface, rect.left+corner_radius, rect.bottom-corner_radius-1, corner_radius, color)
-    pygame.gfxdraw.aacircle(surface, rect.right-corner_radius-1, rect.bottom-corner_radius-1, corner_radius, color)
-
-    pygame.gfxdraw.filled_circle(surface, rect.left+corner_radius, rect.top+corner_radius, corner_radius, color)
-    pygame.gfxdraw.filled_circle(surface, rect.right-corner_radius-1, rect.top+corner_radius, corner_radius, color)
-    pygame.gfxdraw.filled_circle(surface, rect.left+corner_radius, rect.bottom-corner_radius-1, corner_radius, color)
-    pygame.gfxdraw.filled_circle(surface, rect.right-corner_radius-1, rect.bottom-corner_radius-1, corner_radius, color)
-
-    rect_tmp = pygame.Rect(rect)
-
-    rect_tmp.width -= 2 * corner_radius
-    rect_tmp.center = rect.center
-    pygame.draw.rect(surface, color, rect_tmp)
-
-    rect_tmp.width = rect.width
-    rect_tmp.height -= 2 * corner_radius
-    rect_tmp.center = rect.center
-    pygame.draw.rect(surface, color, rect_tmp)
-
-def draw_bordered_rounded_rect(surface, rect, color, border_color, corner_radius, border_thickness):
-    if corner_radius < 0:
-        raise ValueError(f"border radius ({corner_radius}) must be >= 0")
-
-    rect_tmp = pygame.Rect(rect)
-    center = rect_tmp.center
-
-    if border_thickness:
-        if corner_radius <= 0:
-            pygame.draw.rect(surface, border_color, rect_tmp)
-        else:
-            draw_rounded_rect(surface, rect_tmp, border_color, corner_radius)
-
-        rect_tmp.inflate_ip(-2*border_thickness, -2*border_thickness)
-        inner_radius = corner_radius - border_thickness + 1
-    else:
-        inner_radius = corner_radius
-
-    if inner_radius <= 0:
-        pygame.draw.rect(surface, color, rect_tmp)
-    else:
-        draw_rounded_rect(surface, rect_tmp, color, inner_radius)
 
 class Window:
     def __init__(
@@ -70,7 +15,8 @@ class Window:
         font: str = "fonts/Jaro/static/Jaro-Regular.ttf",
         FPS: int = 60
     ):
-        self.__ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        abs_file_path = os.path.abspath(__file__)
+        ROOT_PATH = os.path.dirname(os.path.dirname(abs_file_path))
         self.SCREEN_WIDTH = size[0]
         self.SCREEN_HEIGHT = size[1]
         pygame.init()
@@ -78,29 +24,60 @@ class Window:
         self.clock = pygame.time.Clock()
         self.canvas = pygame.display.set_mode(size=size)
         pygame.display.set_caption(title=title)
-        print(os.path.join(self.__ROOT_PATH, font))
         # print(font)
-        self.fontTitle = pygame.font.Font(os.path.join(self.__ROOT_PATH, font), 64)
-        self.fontButton = pygame.font.Font(os.path.join(self.__ROOT_PATH, font), 48)
+        self.fontTitle = pygame.font.Font(os.path.join(ROOT_PATH, font), 64)
+        self.fontButton = pygame.font.Font(os.path.join(ROOT_PATH, font), 48)
         self.run = False
         self.FPS = FPS
         self.theme = theme.get()
 
+        # Window Interface Handling
+        self.buttons = []
+
     def launch(self):
         # i = 0
-        while self.run == False:
-            self.clock.tick(self.FPS)
+        while not self.run:
             self.create_background(pattern_size=64)
+            self.buttons.clear()
             # print(i)
             # i += 1
             self.main_menu()
-            pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.run = True
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.run = True
                     print(event.dict)
 
+            self.update_button_hover(pygame.mouse.get_pos())
+
+            pygame.display.update()
+            self.clock.tick(self.FPS)
+
+    def update_button_hover(self, pos: tuple[int, int]):
+        # {
+        #     "text": text,
+        #     "x": x,
+        #     "y": y,
+        #     "color": color,
+        #     "bg_color": bg_color,
+        #     "stroke": stroke,
+        #     "hitbox": button_hitbox,
+        #     "func": func
+        # }
+        # test: pygame.Rect = draw_bordered_rounded_rect()
+        for button in self.buttons:
+            if button['hitbox'].collidepoint(pos):
+                cursor_color = self.canvas.get_at(pygame.mouse.get_pos())
+                color_list = [
+                    pygame.Color(button['color']),
+                    pygame.Color(button['bg_color']),
+                    pygame.Color(button['stroke'])
+                ]
+                if cursor_color in color_list:
+                    print(f"Collisions with {button['text']}")
+        pass
 
     def create_background(self, pattern_size: int = 24):
         pattern_bool = 0
@@ -108,13 +85,16 @@ class Window:
         while x < self.SCREEN_WIDTH:
             y = 0
             while y < self.SCREEN_HEIGHT:
-                pygame.draw.rect(self.canvas, self.theme[f"bg{1 + pattern_bool}"], pygame.Rect(x, y, pattern_size, pattern_size))
+                pygame.draw.rect(
+                    self.canvas,
+                    self.theme[f"bg{1 + pattern_bool}"],
+                    pygame.Rect(x, y, pattern_size, pattern_size)
+                )
                 pattern_bool = 1 - pattern_bool
 
                 y += pattern_size
 
             x += pattern_size
-
 
         self.add_text(
             text="SNAKE",
@@ -128,7 +108,6 @@ class Window:
             }
         )
 
-
     def main_menu(self):
         self.add_button(
             text="PLAY",
@@ -141,28 +120,46 @@ class Window:
             bg_color="#0000FF"
         )
 
-
-    def add_text(self, text: str, x: int = None, y: int = None, color: str = "#FFFFFF", shadow: dict = None):
+    def add_text(
+            self,
+            text: str,
+            x: int = None,
+            y: int = None,
+            color: str = "#FFFFFF",
+            shadow: dict = None
+    ):
         text_render = self.fontTitle.render(text, True, color)
         x_coord = x
         y_coord = y
 
         text_rect = text_render.get_rect()
-        if x == None and y == None:
+        if x is None and y is None:
             x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
             y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
-        elif x == None:
+        elif x is None:
             x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
-        elif y == None:
+        elif y is None:
             y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
 
         if shadow:
             text_shadow = self.fontTitle.render(text, True, shadow['color'])
             text_shadow.set_alpha(shadow['opacity'])
-            self.canvas.blit(text_shadow, [x_coord + shadow['x'], y_coord + shadow['y']])
+            shadow_x = x_coord + shadow['x']
+            shadow_y = y_coord + shadow['y']
+            self.canvas.blit(text_shadow, [shadow_x, shadow_y])
         self.canvas.blit(text_render, [x_coord, y_coord])
 
-    def add_button(self, text: str, x: int = None, y: int = None, color: str = "#FFFFFF", bg_color: str = "#000000", stroke: str = "#FFFFFF"):
+    def add_button(
+            self,
+            text: str,
+            x: int = None,
+            y: int = None,
+            color: str = "#FFFFFF",
+            bg_color: str = "#000000",
+            stroke: str = "#FFFFFF",
+            func: callable = print,
+            append: bool = True
+    ):
 
         # Padding var
         px = 32
@@ -172,25 +169,56 @@ class Window:
         y_coord = y
 
         text_rect = text_render.get_rect()
-        if x == None and y == None:
+        if x is None and y is None:
             x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
             y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
-        elif x == None:
+        elif x is None:
             x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
-        elif y == None:
+        elif y is None:
             y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
 
-        rect_bg = pygame.draw.rect(self.canvas, bg_color, pygame.Rect(x_coord - px, y_coord - py, text_rect.width + (px * 2), text_rect.height + (py * 2)), 0, 64)
-
+        # rect_bg = pygame.draw.rect(self.canvas, bg_color, pygame.Rect(
+        #     x_coord - px, y_coord - py,
+        #     text_rect.width + (px * 2),
+        #     text_rect.height + (py * 2)),
+        #     0,
+        #     64
+        # )
 
         # def draw_circle(surface, x, y, radius, color):
         #     gfxdraw.aacircle(surface, x, y, radius, color)
         #     gfxdraw.filled_circle(surface, x, y, radius, color)
 
+        button_rect = pygame.Rect(
+            x_coord - px, y_coord - py,
+            text_rect.width + (px * 2),
+            text_rect.height + (py * 2))
 
-        # stroke_bg = pygame.draw.rect(self.canvas, stroke, pygame.Rect(x_coord - px, y_coord - py, text_rect.width + (px * 2), text_rect.height + (py * 2)), 5, 64)
-        draw_bordered_rounded_rect(self.canvas, pygame.Rect(x_coord - px, y_coord - py, text_rect.width + (px * 2), text_rect.height + (py * 2)), pygame.Color(0, 0, 255), pygame.Color(255, 255, 255), 32, 5)
+        draw_bordered_rounded_rect(
+            self.canvas,
+            button_rect,
+            pygame.Color(bg_color),
+            pygame.Color(stroke),
+            32,
+            5
+        )
+
+        if append:
+            self.buttons.append(
+                {
+                    "text": text,
+                    "x": x,
+                    "y": y,
+                    "color": color,
+                    "bg_color": bg_color,
+                    "stroke": stroke,
+                    "hitbox": button_rect,
+                    "func": func
+                }
+            )
+
         self.canvas.blit(text_render, [x_coord, y_coord])
+
 
 if __name__ == "__main__":
     window = Window(title="SnakeAI", size=(1000, 800))
