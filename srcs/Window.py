@@ -43,7 +43,7 @@ class Window:
             self.buttons.clear()
             # print(i)
             # i += 1
-            self.main_menu()
+            self.MENU_main()
             onclick = False
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -137,21 +137,6 @@ class Window:
                 "x": 4,
                 "y": 4,
             }
-        )
-
-    def main_menu(self):
-        self.add_button(
-            text="PLAY",
-            y=self.SCREEN_HEIGHT / 2 - 140,
-            bg_default="#0000FF",
-            bg_hover="#000097",
-        )
-        self.add_button(
-            text="LEAVE",
-            y=self.SCREEN_HEIGHT / 2,
-            bg_default="#0000FF",
-            bg_hover="#000097",
-            func=self.exit_window
         )
 
     def add_text(
@@ -256,6 +241,24 @@ class Window:
             )
 
         self.canvas.blit(text_render, [x_coord, y_coord])
+
+    def MENU_main(self):
+        self.add_button(
+            text="PLAY",
+            y=self.SCREEN_HEIGHT / 2 - 140,
+            bg_default="#0000FF",
+            bg_hover="#000097",
+        )
+        self.add_button(
+            text="LEAVE",
+            y=self.SCREEN_HEIGHT / 2,
+            bg_default="#0000FF",
+            bg_hover="#000097",
+            func=self.exit_window
+        )
+
+    def GAME_interface(self):
+        pass
 
 
 if __name__ == "__main__":
