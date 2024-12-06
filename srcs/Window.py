@@ -37,26 +37,33 @@ class Window:
 
     def launch(self):
         # i = 0
-        while not self.run:
+        self.run = True
+        while self.run:
             self.create_background(pattern_size=64)
             self.buttons.clear()
             # print(i)
             # i += 1
             self.main_menu()
+            onclick = False
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.run = True
+                    self.exit_window()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        self.run = True
-                    print(event.dict)
+                        self.exit_window()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        onclick = True
 
-            self.update_button_hover(pygame.mouse.get_pos())
+            self.update_button(pygame.mouse.get_pos(), onclick)
 
             pygame.display.update()
             self.clock.tick(self.FPS)
 
-    def update_button_hover(self, pos: tuple[int, int]):
+    def exit_window(self):
+        self.run = False
+
+    def update_button(self, pos: tuple[int, int], onclick: bool = False):
         # {
         #     "text": text,
         #     "x": x,
@@ -81,6 +88,8 @@ class Window:
                     # print(f"Collisions with {button['text']}")
                     hover = True
                     final_hover = True
+                    if onclick:
+                        button['func']()
 
             self.add_button(
                 button['text'],
@@ -142,6 +151,7 @@ class Window:
             y=self.SCREEN_HEIGHT / 2,
             bg_default="#0000FF",
             bg_hover="#000097",
+            func=self.exit_window
         )
 
     def add_text(
