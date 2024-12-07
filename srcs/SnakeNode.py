@@ -4,6 +4,6 @@ class SnakeNode:
         self.j = pos[1]
 
         self.head = head
-        self.direction = None
+        self.direction = direction
         self.next_node = None
         self.previous_node = None

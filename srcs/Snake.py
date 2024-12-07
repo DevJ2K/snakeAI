@@ -16,8 +16,8 @@ class Snake:
                              "or equal to 1.")
 
         self.WALL = {'char': 'W', 'color': BLACKHB}
-        self.HEAD = {'char': 'H', 'color': CYANHB}
-        self.SNAKE_BODY = {'char': 'S', 'color': BLUEHB}
+        self.HEAD = {'char': 'H', 'color': CYANB}
+        self.SNAKE_BODY = {'char': 'S', 'color': BLUEB}
         self.GREEN_APPLE = {'char': 'G', 'color': GREENHB}
         self.RED_APPLE = {'char': 'R', 'color': REDHB}
         self.EMPTY_SPACE = {'char': '0', 'color': BLACKB}
@@ -47,7 +47,8 @@ class Snake:
         self.snake_length = snake_length
 
         self.board: list[list[str]] = self.__create_board()
-        self.snake: list[SnakeNode] = self.__get_snake()
+        self.snake: list[SnakeNode] = []
+        self.__init_snake()
 
         self.__place_snake()
 
@@ -63,16 +64,14 @@ class Snake:
         board.append([self.WALL['char'] for _ in range(self.size + 2)])
         return board
 
-    def __get_snake(self):
-        nodes: list[SnakeNode] = []
+    def __init_snake(self):
         random_i = random.randint(self.snake_length, self.size - (self.snake_length - 1))
         random_j = random.randint(self.snake_length, self.size - (self.snake_length - 1))
 
-        nodes.append(SnakeNode((random_i, random_j), random.choice(self.directions), True))
+        self.snake.append(SnakeNode((random_i, random_j), random.choice(self.directions), True))
 
-        for i in range(1, self.snake_length):
-            self.add_snake_node()
-        return nodes
+        for _ in range(1, self.snake_length):
+            self.snake.append(self.__new_snake_node())
 
     def __place_snake(self):
         for node in self.snake:
@@ -81,9 +80,25 @@ class Snake:
             else:
                 self.board[node.i][node.j] = self.SNAKE_BODY['char']
 
-    def add_snake_node(self):
-        
+    def __place_random_apple(self):
+        possibility_slot = []
         pass
+
+    def __new_snake_node(self) -> None:
+        if len(self.snake) == 0:
+            return
+        last_node = self.snake[-1]
+
+        reverse_pos = (-last_node.direction[0], -last_node.direction[1])
+        print(reverse_pos)
+        # reverse_pos[0] = -reverse_pos[0]
+        # reverse_pos[1] = -reverse_pos[1]
+
+        return SnakeNode(
+            (last_node.i + reverse_pos[0], last_node.j + reverse_pos[1]),
+            last_node.direction,
+            False
+        )
 
     def update_snake_nodes(self):
         pass
