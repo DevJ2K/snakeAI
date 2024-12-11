@@ -21,5 +21,7 @@ class SnakeNode:
         self.j += direction[1]
 
     def new_coordinate(self, i: int, j: int):
+        self.direction = (i - self.i, j - self.j)
+        self.opposite_direction = (-self.direction[0], -self.direction[1])
         self.i = i
         self.j = j

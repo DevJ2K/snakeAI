@@ -1,7 +1,8 @@
 import pygame
 import pygame.gfxdraw
 from WindowTheme import WindowTheme
-# from utils.Colors import *
+from srcs.Snake import Snake
+from srcs.SnakeNode import SnakeNode
 from utils.pygame_utils import draw_bordered_rounded_rect
 from utils import my_cursors
 import os
@@ -29,11 +30,19 @@ class Window:
         # print(font)
         self.fontTitle = pygame.font.Font(os.path.join(ROOT_PATH, font), 64)
         self.fontButton = pygame.font.Font(os.path.join(ROOT_PATH, font), 48)
+        self.fontText = pygame.font.Font(os.path.join(ROOT_PATH, font), 24)
         self.run = False
         self.FPS = FPS
+        self.tick = 0
+        self.last_tick = 0
         self.theme = theme.get()
 
         self.menu = "GAME_INTERFACE"
+
+        self.snake = Snake(size=10, snake_length=3)
+
+        self.next_direction = None
+        self.speed = 7
 
         # Window Interface Handling
         self.buttons = []
@@ -49,15 +58,39 @@ class Window:
         else:
             pass
 
+    def handle_gameloop(self):
+        tick = (self.tick * self.speed) % self.FPS
+        last_tick = (self.last_tick * self.speed) % self.FPS
+        if self.snake.is_running == False:
+            return
+        if self.next_direction is None:
+            return
+        if tick < last_tick:
+            if self.snake.next_frame(self.next_direction) == False:
+                self.snake.is_running = False
+        # print(tick)
+
+
+    def handle_gamekey(self, key):
+        # print("HEE1")
+        if self.snake.is_running == False:
+            if key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
+                self.snake.is_running = True
+        if key == pygame.K_UP:
+            self.next_direction = self.snake.UP
+        if key == pygame.K_DOWN:
+            self.next_direction = self.snake.DOWN
+        if key == pygame.K_LEFT:
+            self.next_direction = self.snake.LEFT
+        if key == pygame.K_RIGHT:
+            self.next_direction = self.snake.RIGHT
     def launch(self):
-        # i = 0
         self.run = True
         while self.run:
             self.create_background(pattern_size=64)
             self.buttons.clear()
-            # print(i)
-            # i += 1
-            # self.menu_select()
+            self.last_tick = self.tick
+            self.tick += 1
             self.current_menu()
             onclick = False
             for event in pygame.event.get():
@@ -66,13 +99,18 @@ class Window:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.exit_window()
+                    if self.menu == "GAME_INTERFACE":
+                        self.handle_gamekey(event.key)
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         onclick = True
 
+            if self.menu == "GAME_INTERFACE":
+                self.handle_gameloop()
             self.update_button(pygame.mouse.get_pos(), onclick)
 
-            pygame.display.update()
+            pygame.display.flip()
             self.clock.tick(self.FPS)
 
     def exit_window(self):
@@ -151,11 +189,12 @@ class Window:
             y=32,
             color="#FFFFFF",
             shadow={
-                "color": "#0000FF",
+                "color": self.theme['accent'],
                 "opacity": 42,
                 "x": 4,
                 "y": 4,
-            }
+            },
+            font=self.fontTitle
         )
 
     def add_text(
@@ -164,9 +203,12 @@ class Window:
             x: int = None,
             y: int = None,
             color: str = "#FFFFFF",
-            shadow: dict = None
+            shadow: dict = None,
+            font: pygame.font.Font = None
     ):
-        text_render = self.fontTitle.render(text, True, color)
+        if font is None:
+            font = self.fontText
+        text_render = font.render(text, True, color)
         x_coord = x
         y_coord = y
 
@@ -281,6 +323,41 @@ class Window:
             func=self.exit_window
         )
 
+    def draw_on_board(
+            self,
+            x: int,
+            y: int,
+            TILE_X: int,
+            TILE_Y: int,
+            item: dict,
+            pattern_bool: int = 0
+    ):
+
+        if item['name'] in ["HEAD", "SNAKE_BODY"]:
+
+            pygame.draw.rect(
+                self.canvas,
+                item['hex'],
+                pygame.Rect(x, y, TILE_X, TILE_Y)
+            )
+        elif item['name'] in ["GREEN_APPLE", "RED_APPLE"]:
+            pygame.draw.rect(
+                self.canvas,
+                item['hex'],
+                pygame.Rect(x, y, TILE_X, TILE_Y)
+            )
+        elif item['name'] == "EMPTY_SPACE":
+            pygame.draw.rect(
+                self.canvas,
+                self.theme[f"board{1 + pattern_bool}"],
+                pygame.Rect(x, y, TILE_X, TILE_Y)
+            )
+        else:
+            pygame.draw.rect(
+                self.canvas,
+                "#1F1F1F",
+                pygame.Rect(x, y, TILE_X, TILE_Y)
+            )
 
     def create_snakeboard(self, size: int = 10):
         # Create game board border
@@ -301,15 +378,18 @@ class Window:
 
         y = self.SCREEN_HEIGHT / 2 - (HEIGHT / 2)
         pattern_bool = 0
-        for _ in range(size):
+        for i in range(size):
             x = self.SCREEN_WIDTH / 2 - (WIDTH / 2)
-            for __ in range(size):
+            for j in range(size):
                 pattern_bool = 1 - pattern_bool
-                pygame.draw.rect(
-                    self.canvas,
-                    self.theme[f"board{1 + pattern_bool}"],
-                    pygame.Rect(x, y, TILE_X, TILE_Y)
-                )
+                char = self.snake.get_board_without_border()[i][j]
+                item = self.snake.get_item_by_char(char)
+                self.draw_on_board(x, y, TILE_X, TILE_Y, item, pattern_bool)
+                # pygame.draw.rect(
+                #     self.canvas,
+                #     self.theme[f"board{1 + pattern_bool}"],
+                #     pygame.Rect(x, y, TILE_X, TILE_Y)
+                # )
                 x += TILE_X
             if size % 2 == 0:
                 pattern_bool = 1 - pattern_bool
@@ -335,7 +415,12 @@ class Window:
         )
 
     def GAME_interface(self):
-        self.create_snakeboard(size=10)
+        self.create_snakeboard(size=self.snake.size)
+        if self.snake.is_running == False:
+            self.add_text("Press any direction to start", y=120)
+        else:
+            self.add_text(f"G: {self.snake.green_apple_eat} | R: {self.snake.red_apple_eat} | Len {self.snake.snake_length}", y=120)
+
         self.add_button(
             text="LEAVE",
             y=self.SCREEN_HEIGHT - 100,
@@ -344,6 +429,7 @@ class Window:
             func=self.switch_menu,
             func_params="MAIN"
         )
+
 
 
 if __name__ == "__main__":

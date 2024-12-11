@@ -17,12 +17,18 @@ class Snake:
             raise SnakeError("The snake length must be greater than "
                              "or equal to 1.")
 
-        self.WALL = {'char': 'W', 'color': Colors.BLACKHB}
-        self.HEAD = {'char': 'H', 'color': Colors.MAGHB}
-        self.SNAKE_BODY = {'char': 'S', 'color': Colors.BLUEB}
-        self.GREEN_APPLE = {'char': 'G', 'color': Colors.GREENHB}
-        self.RED_APPLE = {'char': 'R', 'color': Colors.REDHB}
-        self.EMPTY_SPACE = {'char': '0', 'color': Colors.BLACKB}
+        self.WALL = {
+            'name': "WALL", 'char': 'W', 'color': Colors.BLACKHB, 'hex': "#3A3A3A"}
+        self.HEAD = {
+            'name': "HEAD", 'char': 'H', 'color': Colors.MAGHB, 'hex': "#09dcf2"}
+        self.SNAKE_BODY = {
+            'name': "SNAKE_BODY", 'char': 'S', 'color': Colors.BLUEB, 'hex': "#0c00c3"}
+        self.GREEN_APPLE = {
+            'name': "GREEN_APPLE", 'char': 'G', 'color': Colors.GREENHB, 'hex': "#50FF50"}
+        self.RED_APPLE = {
+            'name': "RED_APPLE", 'char': 'R', 'color': Colors.REDHB, 'hex': "#FF5050"}
+        self.EMPTY_SPACE = {
+            'name': "EMPTY_SPACE", 'char': '0', 'color': Colors.BLACKB, 'hex': "#AAAAAA"}
 
         self.UP = (-1, 0)
         self.DOWN = (1, 0)
@@ -50,6 +56,8 @@ class Snake:
         self.green_apple_eat = 0
         self.red_apple_eat = 0
 
+        self.is_running = False
+
         self.board: list[list[str]] = self.__create_board()
         self.snake: list[SnakeNode] = []
         self.__init_snake()
@@ -68,6 +76,17 @@ class Snake:
         board.insert(0, [self.WALL['char'] for _ in range(self.size + 2)])
         board.append([self.WALL['char'] for _ in range(self.size + 2)])
         return board
+
+    def get_board_with_border(self) -> list[list[str]]:
+        return self.board
+
+    def get_board_without_border(self) -> list[list[str]]:
+        new_board: list[list[str]] = []
+        for i in range(1, len(self.board) - 1):
+            new_board.append([])
+            for j in range(1, len(self.board[i]) - 1):
+                new_board[i - 1].append(self.board[i][j])
+        return new_board
 
     def __init_snake(self):
         a = self.snake_length
@@ -100,7 +119,6 @@ class Snake:
                     possibility_slot.append((i, j))
 
         slot = random.choice(possibility_slot)
-        possibility_slot.remove(slot)
         self.board[slot[0]][slot[1]] = apple['char']
         # for possibility in possibility_slot:
         #     self.board[possibility[0]][possibility[1]] = "T"
@@ -139,7 +157,6 @@ class Snake:
         last_node = self.snake[-1]
 
         reverse_pos = (-last_node.direction[0], -last_node.direction[1])
-        print(reverse_pos)
         # reverse_pos[0] = -reverse_pos[0]
         # reverse_pos[1] = -reverse_pos[1]
 
@@ -180,25 +197,29 @@ class Snake:
         if self.board[next_i][next_j] == self.GREEN_APPLE['char']:
             apple = self.GREEN_APPLE
             self.snake.append(self.__new_snake_node())
+            print("GREENAPPLE", next_i, next_j)
             self.green_apple_eat += 1
             self.snake_length += 1
         elif self.board[next_i][next_j] == self.RED_APPLE['char']:
-            if snake.snake_length == 1:
+            if self.snake_length == 1:
                 return False
             apple = self.RED_APPLE
+            print("REDAPPLE", next_i, next_j)
             pop_node = self.snake.pop()
             self.board[pop_node.i][pop_node.j] = self.EMPTY_SPACE['char']
             self.red_apple_eat += 1
             self.snake_length -= 1
 
-        self.update_snake_nodes(new_direction=direction)
+        self.update_snake_nodes(new_direction=direction, new_node=apple==self.GREEN_APPLE)
         self.__place_snake()
         if apple is not None:
             self.__place_random_apple(apple)
+        self.display_board()
         return True
 
-    def update_snake_nodes(self, new_direction: tuple[int, int]):
-        self.board[self.snake[-1].i][self.snake[-1].j] = self.EMPTY_SPACE['char']
+    def update_snake_nodes(self, new_direction: tuple[int, int], new_node: bool = False):
+        if new_node == False:
+            self.board[self.snake[-1].i][self.snake[-1].j] = self.EMPTY_SPACE['char']
         for i in range(len(self.snake) - 1, 0, -1):
             self.snake[i].new_coordinate(self.snake[i - 1].i, self.snake[i - 1].j)
         self.snake[0].apply_direction(new_direction)
@@ -208,6 +229,9 @@ class Snake:
             if item['char'] == char:
                 return item
         return None
+
+    def get_item_by_coordinate(self, i: int, j: int) -> dict | None:
+        return self.get_item_by_char(self.board[i][j])
 
     def display_board(self, spacing: bool = False):
         display_str = ""
