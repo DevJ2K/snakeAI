@@ -47,6 +47,8 @@ class Snake:
 
         self.size = size
         self.snake_length = snake_length
+        self.green_apple_eat = 0
+        self.red_apple_eat = 0
 
         self.board: list[list[str]] = self.__create_board()
         self.snake: list[SnakeNode] = []
@@ -130,8 +132,56 @@ class Snake:
             False
         )
 
-    def update_snake_nodes(self):
-        pass
+    # def get_snake_pos(self) -> tuple[int, int]:
+    #     for i in range(len(self.board)):
+    #         for j in range(len(self.board[i])):
+    #             if self.board[i][j] == self.HEAD['char']:
+    #                 return (i, j)
+
+    def next_frame(self, direction: tuple[int, int]) -> bool:
+        next_i = self.snake[0].i + direction[0]
+        next_j = self.snake[0].j + direction[1]
+
+        # self.all_items = [
+        #     self.WALL,
+        #     self.HEAD,
+        #     self.SNAKE_BODY,
+        #     self.GREEN_APPLE,
+        #     self.RED_APPLE,
+        #     self.EMPTY_SPACE
+        # ]
+
+
+        if self.board[next_i][next_j] not in [
+            self.GREEN_APPLE['char'],
+            self.RED_APPLE['char'],
+            self.EMPTY_SPACE['char'],
+        ]:
+            return False
+
+        if self.board[next_i][next_j] == self.GREEN_APPLE['char']:
+            # New random apple
+            self.__new_snake_node()
+            self.green_apple_eat += 1
+            self.snake_length += 1
+        elif self.board[next_i][next_j] == self.RED_APPLE['char']:
+            if snake.snake_length == 1:
+                return False
+            # New random apple
+            self.snake.pop()
+            self.red_apple_eat += 1
+            self.snake_length -= 1
+
+        self.update_snake_nodes(new_direction=direction)
+        self.__place_snake()
+        return True
+
+    def update_snake_nodes(self, new_direction: tuple[int, int]):
+        self.board[self.snake[-1].i][self.snake[-1].j] = self.EMPTY_SPACE['char']
+        for i in range(len(self.snake) - 1, 0, -1):
+            # print(i)
+            self.snake[i].new_coordinate(self.snake[i - 1].i, self.snake[i - 1].j)
+        self.snake[0].apply_direction(new_direction)
 
     def get_item_by_char(self, char: str) -> dict | None:
         for item in self.all_items:
@@ -161,7 +211,19 @@ class Snake:
 
 if __name__ == "__main__":
     # from pprint import pprint
+    import time
+
     snake = Snake(size=10, snake_length=3)
+    snake.display_board(False)
+    # time.sleep(2)
+    next_direction = input("Direction -> ")
+    direction_list = {
+        "UP": snake.UP,
+        "DOWN": snake.DOWN,
+        "LEFT": snake.LEFT,
+        "RIGHT": snake.RIGHT
+    }
+    snake.next_frame(direction_list[next_direction.upper()])
     snake.display_board(False)
 
     pass
