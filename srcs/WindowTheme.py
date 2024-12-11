@@ -3,7 +3,9 @@ class WindowTheme:
         self.__theme = THEME
         self.__blue_range = {
             "bg1": "#1D1B62",
-            "bg2": "#222169"
+            "bg2": "#222169",
+            "board1": "#2E2E4D",
+            "board2": "#222241",
         }
         pass
 

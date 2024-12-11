@@ -5,6 +5,7 @@ from WindowTheme import WindowTheme
 from utils.pygame_utils import draw_bordered_rounded_rect
 from utils import my_cursors
 import os
+import math
 
 
 class Window:
@@ -32,8 +33,21 @@ class Window:
         self.FPS = FPS
         self.theme = theme.get()
 
+        self.menu = "GAME_INTERFACE"
+
         # Window Interface Handling
         self.buttons = []
+
+    def switch_menu(self, menu: str):
+        self.menu = menu
+
+    def current_menu(self):
+        if self.menu == "MAIN":
+            self.MENU_main()
+        elif self.menu == "GAME_INTERFACE":
+            self.GAME_interface()
+        else:
+            pass
 
     def launch(self):
         # i = 0
@@ -43,7 +57,8 @@ class Window:
             self.buttons.clear()
             # print(i)
             # i += 1
-            self.MENU_main()
+            # self.menu_select()
+            self.current_menu()
             onclick = False
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -89,7 +104,10 @@ class Window:
                     hover = True
                     final_hover = True
                     if onclick:
-                        button['func']()
+                        if button['func_params']:
+                            button['func'](button['func_params'])
+                        else:
+                            button['func']()
 
             self.add_button(
                 button['text'],
@@ -100,6 +118,7 @@ class Window:
                 button['bg_hover'],
                 button['stroke'],
                 button['func'],
+                button['func_params'],
                 hover,
                 False,
             )
@@ -178,6 +197,7 @@ class Window:
             bg_hover: str = "#4F4F4F",
             stroke: str = "#FFFFFF",
             func: callable = print,
+            func_params: tuple = None,
             hover: bool = False,
             append: bool = True
     ):
@@ -236,7 +256,8 @@ class Window:
                     "bg_hover": bg_hover,
                     "stroke": stroke,
                     "hitbox": button_rect,
-                    "func": func
+                    "func": func,
+                    "func_params": func_params
                 }
             )
 
@@ -248,7 +269,10 @@ class Window:
             y=self.SCREEN_HEIGHT / 2 - 140,
             bg_default="#0000FF",
             bg_hover="#000097",
+            func=self.switch_menu,
+            func_params="GAME_INTERFACE"
         )
+
         self.add_button(
             text="LEAVE",
             y=self.SCREEN_HEIGHT / 2,
@@ -257,8 +281,66 @@ class Window:
             func=self.exit_window
         )
 
+
+    def create_snakeboard(self, x_case = 10, y_case: int = 10):
+        # Create game board border
+        DEFAULT_WIDTH = 400
+        DEFAULT_HEIGHT = 400
+        BORDER_SIZE = 6
+
+
+        # text_rect = text_render.get_rect()
+        # if x is None and y is None:
+        #     x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
+        #     y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
+
+        WIDTH = DEFAULT_WIDTH - (2 * BORDER_SIZE)
+        HEIGHT = DEFAULT_HEIGHT - (2 * BORDER_SIZE)
+        TILE_X = round(WIDTH / x_case)
+        TILE_Y = round(HEIGHT / y_case)
+
+        y = self.SCREEN_HEIGHT / 2 - (HEIGHT / 2)
+        pattern_bool = 0
+        for i in range(x_case):
+            x = self.SCREEN_WIDTH / 2 - (WIDTH / 2)
+            for j in range(y_case):
+                pattern_bool = 1 - pattern_bool
+                pygame.draw.rect(
+                    self.canvas,
+                    self.theme[f"board{1 + pattern_bool}"],
+                    pygame.Rect(x, y, TILE_X, TILE_Y)
+                )
+                x += TILE_X
+            pattern_bool = 1 - pattern_bool
+            y += TILE_Y
+
+        outline_border = pygame.draw.rect(self.canvas, pygame.Color(255, 255, 255), pygame.Rect(
+            self.SCREEN_WIDTH / 2 - (DEFAULT_WIDTH / 2) - (BORDER_SIZE),
+            self.SCREEN_HEIGHT / 2 - (DEFAULT_HEIGHT / 2) - (BORDER_SIZE),
+            DEFAULT_WIDTH + (BORDER_SIZE * 2),
+            DEFAULT_HEIGHT + (BORDER_SIZE * 2)),
+            BORDER_SIZE,
+            16
+        )
+        inline_border = pygame.draw.rect(self.canvas, pygame.Color(255, 255, 255), pygame.Rect(
+            self.SCREEN_WIDTH / 2 - (DEFAULT_WIDTH / 2),
+            self.SCREEN_HEIGHT / 2 - (DEFAULT_HEIGHT / 2),
+            DEFAULT_WIDTH,
+            DEFAULT_HEIGHT),
+            BORDER_SIZE,
+            0
+        )
+
     def GAME_interface(self):
-        pass
+        self.create_snakeboard()
+        self.add_button(
+            text="LEAVE",
+            y=self.SCREEN_HEIGHT - 100,
+            bg_default="#0000FF",
+            bg_hover="#000097",
+            func=self.switch_menu,
+            func_params="MAIN"
+        )
 
 
 if __name__ == "__main__":
