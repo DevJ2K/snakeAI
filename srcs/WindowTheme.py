@@ -6,6 +6,8 @@ class WindowTheme:
             "bg2": "#222169",
             "board1": "#2E2E4D",
             "board2": "#222241",
+            "btn": "#0000FF",
+            "btn-hover": "#000097",
         }
         pass
 
