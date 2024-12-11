@@ -88,6 +88,23 @@ class Snake:
             else:
                 self.board[node.i][node.j] = self.SNAKE_BODY['char']
 
+    def __place_random_apple(self, apple: dict):
+        possibility_slot = []
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                if is_enough_space_around(
+                    self.board, i, j, [
+                        self.EMPTY_SPACE['char']
+                    ], 0
+                ):
+                    possibility_slot.append((i, j))
+
+        slot = random.choice(possibility_slot)
+        possibility_slot.remove(slot)
+        self.board[slot[0]][slot[1]] = apple['char']
+        # for possibility in possibility_slot:
+        #     self.board[possibility[0]][possibility[1]] = "T"
+
     def __place_apples(self):
         possibility_slot = []
         for i in range(len(self.board)):
@@ -141,6 +158,7 @@ class Snake:
     def next_frame(self, direction: tuple[int, int]) -> bool:
         next_i = self.snake[0].i + direction[0]
         next_j = self.snake[0].j + direction[1]
+        apple = None
 
         # self.all_items = [
         #     self.WALL,
@@ -160,26 +178,28 @@ class Snake:
             return False
 
         if self.board[next_i][next_j] == self.GREEN_APPLE['char']:
-            # New random apple
-            self.__new_snake_node()
+            apple = self.GREEN_APPLE
+            self.snake.append(self.__new_snake_node())
             self.green_apple_eat += 1
             self.snake_length += 1
         elif self.board[next_i][next_j] == self.RED_APPLE['char']:
             if snake.snake_length == 1:
                 return False
-            # New random apple
-            self.snake.pop()
+            apple = self.RED_APPLE
+            pop_node = self.snake.pop()
+            self.board[pop_node.i][pop_node.j] = self.EMPTY_SPACE['char']
             self.red_apple_eat += 1
             self.snake_length -= 1
 
         self.update_snake_nodes(new_direction=direction)
         self.__place_snake()
+        if apple is not None:
+            self.__place_random_apple(apple)
         return True
 
     def update_snake_nodes(self, new_direction: tuple[int, int]):
         self.board[self.snake[-1].i][self.snake[-1].j] = self.EMPTY_SPACE['char']
         for i in range(len(self.snake) - 1, 0, -1):
-            # print(i)
             self.snake[i].new_coordinate(self.snake[i - 1].i, self.snake[i - 1].j)
         self.snake[0].apply_direction(new_direction)
 
@@ -214,16 +234,18 @@ if __name__ == "__main__":
     import time
 
     snake = Snake(size=10, snake_length=3)
+    # snake._Snake__place_random_apple({})
     snake.display_board(False)
     # time.sleep(2)
-    next_direction = input("Direction -> ")
     direction_list = {
-        "UP": snake.UP,
-        "DOWN": snake.DOWN,
-        "LEFT": snake.LEFT,
-        "RIGHT": snake.RIGHT
+        "U": snake.UP,
+        "D": snake.DOWN,
+        "L": snake.LEFT,
+        "R": snake.RIGHT
     }
-    snake.next_frame(direction_list[next_direction.upper()])
-    snake.display_board(False)
-
-    pass
+    while True:
+        next_direction = input("Direction -> ")
+        if snake.next_frame(direction_list[next_direction.upper()]) == False:
+            break
+        snake.display_board(False)
+    print(f"GAME OVER : {snake.green_apple_eat} GA | {snake.red_apple_eat} RA")

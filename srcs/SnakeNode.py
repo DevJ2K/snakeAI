@@ -15,6 +15,8 @@ class SnakeNode:
         # self.previous_node = None
 
     def apply_direction(self, direction: tuple[int, int]):
+        self.direction = direction
+        self.opposite_direction = (-direction[0], -direction[1])
         self.i += direction[0]
         self.j += direction[1]
 
