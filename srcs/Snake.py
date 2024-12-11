@@ -1,6 +1,8 @@
 from srcs.SnakeNode import SnakeNode
-from utils.Colors import *
+from utils.snake_utils import is_enough_space_around
+import utils.Colors as Colors
 import random
+
 
 class SnakeError(Exception):
     pass
@@ -15,12 +17,12 @@ class Snake:
             raise SnakeError("The snake length must be greater than "
                              "or equal to 1.")
 
-        self.WALL = {'char': 'W', 'color': BLACKHB}
-        self.HEAD = {'char': 'H', 'color': CYANB}
-        self.SNAKE_BODY = {'char': 'S', 'color': BLUEB}
-        self.GREEN_APPLE = {'char': 'G', 'color': GREENHB}
-        self.RED_APPLE = {'char': 'R', 'color': REDHB}
-        self.EMPTY_SPACE = {'char': '0', 'color': BLACKB}
+        self.WALL = {'char': 'W', 'color': Colors.BLACKHB}
+        self.HEAD = {'char': 'H', 'color': Colors.MAGHB}
+        self.SNAKE_BODY = {'char': 'S', 'color': Colors.BLUEB}
+        self.GREEN_APPLE = {'char': 'G', 'color': Colors.GREENHB}
+        self.RED_APPLE = {'char': 'R', 'color': Colors.REDHB}
+        self.EMPTY_SPACE = {'char': '0', 'color': Colors.BLACKB}
 
         self.UP = (-1, 0)
         self.DOWN = (1, 0)
@@ -51,12 +53,13 @@ class Snake:
         self.__init_snake()
 
         self.__place_snake()
+        self.__place_apples()
 
         # self.direction = None
 
-
     def __create_board(self) -> list[list[str]]:
-        board = [[self.EMPTY_SPACE['char'] for _ in range(self.size)] for __ in range(self.size)]
+        board = [[self.EMPTY_SPACE['char']
+                  for _ in range(self.size)] for __ in range(self.size)]
         for line in board:
             line.insert(0, self.WALL['char'])
             line.append(self.WALL['char'])
@@ -65,10 +68,13 @@ class Snake:
         return board
 
     def __init_snake(self):
-        random_i = random.randint(self.snake_length, self.size - (self.snake_length - 1))
-        random_j = random.randint(self.snake_length, self.size - (self.snake_length - 1))
+        a = self.snake_length
+        b = self.size - (self.snake_length - 1)
+        i = random.randint(a, b)
+        j = random.randint(a, b)
+        direction = random.choice(self.directions)
 
-        self.snake.append(SnakeNode((random_i, random_j), random.choice(self.directions), True))
+        self.snake.append(SnakeNode((i, j), direction, True))
 
         for _ in range(1, self.snake_length):
             self.snake.append(self.__new_snake_node())
@@ -80,9 +86,33 @@ class Snake:
             else:
                 self.board[node.i][node.j] = self.SNAKE_BODY['char']
 
-    def __place_random_apple(self):
+    def __place_apples(self):
         possibility_slot = []
-        pass
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                if is_enough_space_around(
+                    self.board, i, j, [
+                        self.EMPTY_SPACE['char'],
+                        self.GREEN_APPLE['char'],
+                        self.RED_APPLE['char'],
+                    ], 1
+                ):
+                    possibility_slot.append((i, j))
+
+        # PLACE 2 GREEN APPLES
+        for _ in range(2):
+            slot = random.choice(possibility_slot)
+            possibility_slot.remove(slot)
+            self.board[slot[0]][slot[1]] = self.GREEN_APPLE['char']
+
+        # PLACE 1 RED APPLE
+        for _ in range(1):
+            slot = random.choice(possibility_slot)
+            possibility_slot.remove(slot)
+            self.board[slot[0]][slot[1]] = self.RED_APPLE['char']
+
+        # for possibility in possibility_slot:
+        #     self.board[possibility[0]][possibility[1]] = "T"
 
     def __new_snake_node(self) -> None:
         if len(self.snake) == 0:
@@ -115,16 +145,22 @@ class Snake:
             for j in range(len(self.board[i])):
                 item = self.get_item_by_char(self.board[i][j])
                 if item is not None:
-                    display_str += item['color'] + "  " + RESET
+                    display_str += item['color'] + "  " + Colors.RESET
                     if spacing:
                         display_str += " "
+                else:
+                    display_str += Colors.YELLOWHB + "  " + Colors.RESET
+                    if spacing:
+                        display_str += " "
+
             display_str += "\n"
             if spacing:
                 display_str += "\n"
         print(display_str)
 
+
 if __name__ == "__main__":
-    from pprint import pprint
+    # from pprint import pprint
     snake = Snake(size=10, snake_length=3)
     snake.display_board(False)
 
