@@ -36,7 +36,7 @@ class Window:
         self.last_tick = 0
         self.theme = theme.get()
 
-        self.menu = "GAME_INTERFACE"
+        self.menu = "MAIN"
 
         self.snake = Snake(size=10, snake_length=3)
 
@@ -57,6 +57,10 @@ class Window:
         else:
             pass
 
+    def start_new_snake(self):
+        self.switch_menu("GAME_INTERFACE")
+        self.snake = Snake()
+
     def handle_gameloop(self):
         tick = (self.tick * self.speed) % self.FPS
         last_tick = (self.last_tick * self.speed) % self.FPS
@@ -75,6 +79,7 @@ class Window:
         if self.snake.is_running == True:
             self.snake.game_over = True
             self.snake.is_running = False
+            self.snake.end_timer()
 
     def handle_gamekey(self, key):
         # print("HEE1")
@@ -83,6 +88,7 @@ class Window:
         if self.snake.is_running == False:
             if key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
                 self.snake.is_running = True
+                self.snake.start_timer()
         if key == pygame.K_UP:
             self.next_direction = self.snake.UP
         if key == pygame.K_DOWN:
@@ -364,8 +370,8 @@ class Window:
             y=self.SCREEN_HEIGHT / 2 - 140,
             bg_default=self.theme['btn'],
             bg_hover=self.theme['btn-hover'],
-            func=self.switch_menu,
-            func_params="GAME_INTERFACE"
+            func=self.start_new_snake,
+            func_params=None
         )
 
         self.add_button(
@@ -478,7 +484,7 @@ class Window:
         self.add_text(str(self.snake.snake_length), x=x_center - 100, y=y)
 
         self.add_image("timer.png", x=x_center - 40, y=y, width=32, height=32)
-        self.add_text(f"{12.8546:.2f}s", x=x_center + 2, y=y)
+        self.add_text(f"{self.snake.get_timer():.2f}s", x=x_center + 2, y=y)
         # self.add_text(str(self.snake.green_apple_eat), x=x_center - 50, y=y)
 
         self.add_image("trophy.png", x=x_center + 100, y=y, width=32, height=32)
@@ -516,8 +522,8 @@ class Window:
                 bg_default=self.theme['btn'],
                 bg_hover=self.theme['btn-hover'],
                 border_radius=16,
-                func=print,
-                func_params="RESTART"
+                func=self.start_new_snake,
+                func_params=None
             )
         else:
             self.display_game_info(y=120)

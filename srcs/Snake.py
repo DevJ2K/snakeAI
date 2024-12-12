@@ -2,7 +2,7 @@ from srcs.SnakeNode import SnakeNode
 from utils.snake_utils import is_enough_space_around
 import utils.Colors as Colors
 import random
-
+import time
 
 class SnakeError(Exception):
     pass
@@ -59,6 +59,7 @@ class Snake:
 
         self.is_running = False
         self.game_over = False
+        self.timer = None
 
         self.board: list[list[str]] = self.__create_board()
         self.snake: list[SnakeNode] = []
@@ -256,6 +257,18 @@ class Snake:
             if spacing:
                 display_str += "\n"
         print(display_str)
+
+    def start_timer(self):
+        self.timer = time.time()
+
+    def end_timer(self):
+        self.timer = time.time() - self.timer
+        pass
+
+    def get_timer(self):
+        if self.is_running:
+            return time.time() - self.timer
+        return self.timer
 
 
 if __name__ == "__main__":
