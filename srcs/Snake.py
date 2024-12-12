@@ -53,10 +53,12 @@ class Snake:
 
         self.size = size
         self.snake_length = snake_length
+        self.max_snake_length = snake_length
         self.green_apple_eat = 0
         self.red_apple_eat = 0
 
         self.is_running = False
+        self.game_over = False
 
         self.board: list[list[str]] = self.__create_board()
         self.snake: list[SnakeNode] = []
@@ -200,8 +202,11 @@ class Snake:
             print("GREENAPPLE", next_i, next_j)
             self.green_apple_eat += 1
             self.snake_length += 1
+            if self.snake_length > self.max_snake_length:
+                self.max_snake_length = self.snake_length
         elif self.board[next_i][next_j] == self.RED_APPLE['char']:
             if self.snake_length == 1:
+                self.snake_length -= 1
                 return False
             apple = self.RED_APPLE
             print("REDAPPLE", next_i, next_j)

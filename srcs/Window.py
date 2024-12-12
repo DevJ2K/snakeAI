@@ -6,7 +6,6 @@ from srcs.SnakeNode import SnakeNode
 from utils.pygame_utils import draw_bordered_rounded_rect
 from utils import my_cursors
 import os
-import math
 
 
 class Window:
@@ -67,12 +66,20 @@ class Window:
             return
         if tick < last_tick:
             if self.snake.next_frame(self.next_direction) == False:
+                self.handle_gameover()
                 self.snake.is_running = False
         # print(tick)
 
 
+    def handle_gameover(self):
+        if self.snake.is_running == True:
+            self.snake.game_over = True
+            self.snake.is_running = False
+
     def handle_gamekey(self, key):
         # print("HEE1")
+        if self.snake.game_over == True:
+            return
         if self.snake.is_running == False:
             if key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
                 self.snake.is_running = True
@@ -151,10 +158,12 @@ class Window:
                 button['text'],
                 button['x'],
                 button['y'],
+                button['font'],
                 button['color'],
                 button['bg_default'],
                 button['bg_hover'],
                 button['stroke'],
+                button['border_radius'],
                 button['func'],
                 button['func_params'],
                 hover,
@@ -197,6 +206,37 @@ class Window:
             font=self.fontTitle
         )
 
+    def add_image(
+        self,
+        filename: str,
+        x: int = None,
+        y: int = None,
+        width: int = None,
+        height: int = None
+    ):
+        repository_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        img = pygame.image.load(os.path.join(repository_path, "images", filename))
+
+        x_coord = x
+        y_coord = y
+
+        img_rect = img.get_rect()
+        if x is None and y is None:
+            x_coord = (self.SCREEN_WIDTH / 2) - (img_rect.width / 2)
+            y_coord = (self.SCREEN_HEIGHT / 2) - (img_rect.height / 2)
+        elif x is None:
+            x_coord = (self.SCREEN_WIDTH / 2) - (img_rect.width / 2)
+        elif y is None:
+            y_coord = (self.SCREEN_HEIGHT / 2) - (img_rect.height / 2)
+
+        width = img_rect.width if width is None else width
+        height = img_rect.height if height is None else height
+
+        img = pygame.transform.scale(img, (width, height))
+
+        self.canvas.blit(img, pygame.Rect(x_coord, y_coord, width, height))
+
     def add_text(
             self,
             text: str,
@@ -222,7 +262,7 @@ class Window:
             y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
 
         if shadow:
-            text_shadow = self.fontTitle.render(text, True, shadow['color'])
+            text_shadow = font.render(text, True, shadow['color'])
             text_shadow.set_alpha(shadow['opacity'])
             shadow_x = x_coord + shadow['x']
             shadow_y = y_coord + shadow['y']
@@ -234,10 +274,12 @@ class Window:
             text: str,
             x: int = None,
             y: int = None,
+            font: pygame.font.Font = None,
             color: str = "#FFFFFF",
             bg_default: str = "#000000",
             bg_hover: str = "#4F4F4F",
             stroke: str = "#FFFFFF",
+            border_radius: int = 32,
             func: callable = print,
             func_params: tuple = None,
             hover: bool = False,
@@ -247,7 +289,9 @@ class Window:
         # Padding var
         px = 32
         py = 12
-        text_render = self.fontButton.render(text, True, color)
+        if font is None:
+            font = self.fontButton
+        text_render = font.render(text, True, color)
         x_coord = x
         y_coord = y
 
@@ -283,9 +327,16 @@ class Window:
             button_rect,
             pygame.Color(bg_color),
             pygame.Color(stroke),
-            32,
+            border_radius,
             5
         )
+        # while True:
+        #     try:
+        #         break
+        #     except:
+        #         border_radius -= 8
+        # print(border_radius)
+
 
         if append:
             self.buttons.append(
@@ -294,9 +345,11 @@ class Window:
                     "x": x,
                     "y": y,
                     "color": color,
+                    "font": font,
                     "bg_default": bg_default,
                     "bg_hover": bg_hover,
                     "stroke": stroke,
+                    "border_radius": border_radius,
                     "hitbox": button_rect,
                     "func": func,
                     "func_params": func_params
@@ -359,7 +412,7 @@ class Window:
                 pygame.Rect(x, y, TILE_X, TILE_Y)
             )
 
-    def create_snakeboard(self, size: int = 10):
+    def create_snakeboard(self, size: int = 10, draw_snake: bool = True):
         # Create game board border
         DEFAULT_WIDTH = 400
         DEFAULT_HEIGHT = 400
@@ -376,24 +429,28 @@ class Window:
         TILE_X = round(WIDTH / size)
         TILE_Y = round(HEIGHT / size)
 
+        start_x = self.SCREEN_WIDTH / 2 - (WIDTH / 2)
+        start_y = self.SCREEN_HEIGHT / 2 - (HEIGHT / 2)
+
         y = self.SCREEN_HEIGHT / 2 - (HEIGHT / 2)
         pattern_bool = 0
-        for i in range(size):
-            x = self.SCREEN_WIDTH / 2 - (WIDTH / 2)
-            for j in range(size):
-                pattern_bool = 1 - pattern_bool
-                char = self.snake.get_board_without_border()[i][j]
-                item = self.snake.get_item_by_char(char)
-                self.draw_on_board(x, y, TILE_X, TILE_Y, item, pattern_bool)
-                # pygame.draw.rect(
-                #     self.canvas,
-                #     self.theme[f"board{1 + pattern_bool}"],
-                #     pygame.Rect(x, y, TILE_X, TILE_Y)
-                # )
-                x += TILE_X
-            if size % 2 == 0:
-                pattern_bool = 1 - pattern_bool
-            y += TILE_Y
+        if draw_snake:
+            for i in range(size):
+                x = self.SCREEN_WIDTH / 2 - (WIDTH / 2)
+                for j in range(size):
+                    pattern_bool = 1 - pattern_bool
+                    char = self.snake.get_board_without_border()[i][j]
+                    item = self.snake.get_item_by_char(char)
+                    self.draw_on_board(x, y, TILE_X, TILE_Y, item, pattern_bool)
+                    # pygame.draw.rect(
+                    #     self.canvas,
+                    #     self.theme[f"board{1 + pattern_bool}"],
+                    #     pygame.Rect(x, y, TILE_X, TILE_Y)
+                    # )
+                    x += TILE_X
+                if size % 2 == 0:
+                    pattern_bool = 1 - pattern_bool
+                y += TILE_Y
 
         # outline_border
         pygame.draw.rect(self.canvas, pygame.Color(255, 255, 255), pygame.Rect(
@@ -413,14 +470,57 @@ class Window:
             BORDER_SIZE,
             0
         )
+        return (TILE_X * size, TILE_Y * size, start_x, start_y)
+
+    def display_game_info(self, y: int):
+        x_center = self.SCREEN_WIDTH / 2
+        self.add_image("len.png", x=x_center - 160, y=y, width=48, height=32)
+        self.add_text(str(self.snake.snake_length), x=x_center - 100, y=y)
+
+        self.add_image("timer.png", x=x_center - 40, y=y, width=32, height=32)
+        self.add_text(f"{12.8546:.2f}s", x=x_center + 2, y=y)
+        # self.add_text(str(self.snake.green_apple_eat), x=x_center - 50, y=y)
+
+        self.add_image("trophy.png", x=x_center + 100, y=y, width=32, height=32)
+        self.add_text(str(self.snake.max_snake_length), x=x_center + 144, y=y)
+
 
     def GAME_interface(self):
-        self.create_snakeboard(size=self.snake.size)
-        if self.snake.is_running == False:
-            self.add_text("Press any direction to start", y=120)
-        else:
-            self.add_text(f"G: {self.snake.green_apple_eat} | R: {self.snake.red_apple_eat} | Len {self.snake.snake_length}", y=120)
 
+        x_size, y_size, x_start, y_start = self.create_snakeboard(size=self.snake.size, draw_snake=self.snake.game_over==False)
+        if self.snake.is_running == False and self.snake.game_over == False:
+            self.add_text("Press any direction to start", y=120)
+        elif self.snake.is_running == False and self.snake.game_over == True:
+            pygame.draw.rect(
+                self.canvas,
+                self.theme['board2'],
+                pygame.Rect(x_start, y_start, x_size, y_size)
+            )
+            self.add_text("Game is over !", y=120)
+
+            self.add_text(
+                "Stats",
+                y=self.SCREEN_HEIGHT / 2 - 88,
+                font=self.fontButton,
+                shadow={
+                    "color": self.theme['accent'],
+                    "opacity": 42,
+                    "x": 4,
+                    "y": 4,
+            })
+            self.display_game_info(y=self.SCREEN_HEIGHT / 2 - 20)
+            self.add_button(
+                "REPLAY",
+                y=self.SCREEN_HEIGHT / 2 + 42,
+                font=self.fontText,
+                bg_default=self.theme['btn'],
+                bg_hover=self.theme['btn-hover'],
+                border_radius=16,
+                func=print,
+                func_params="RESTART"
+            )
+        else:
+            self.display_game_info(y=120)
         self.add_button(
             text="LEAVE",
             y=self.SCREEN_HEIGHT - 100,
