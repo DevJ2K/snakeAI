@@ -39,6 +39,7 @@ class Window:
         self.menu = "MAIN"
 
         self.snake = Snake(size=10, snake_length=3)
+        self.max_len = self.snake.max_snake_length
 
         self.next_direction = None
         self.speed = 7
@@ -58,8 +59,11 @@ class Window:
             pass
 
     def start_new_snake(self):
+        old_max_len = self.snake.max_snake_length
+        self.max_len = max(self.max_len, old_max_len)
         self.switch_menu("GAME_INTERFACE")
         self.snake = Snake()
+        self.snake.max_snake_length = self.max_len
 
     def handle_gameloop(self):
         tick = (self.tick * self.speed) % self.FPS
@@ -74,6 +78,10 @@ class Window:
                 self.snake.is_running = False
         # print(tick)
 
+    def leave_game(self):
+        self.snake = Snake()
+        self.switch_menu("MAIN")
+
 
     def handle_gameover(self):
         if self.snake.is_running == True:
@@ -85,18 +93,25 @@ class Window:
         # print("HEE1")
         if self.snake.game_over == True:
             return
-        if self.snake.is_running == False:
-            if key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
-                self.snake.is_running = True
-                self.snake.start_timer()
-        if key == pygame.K_UP:
+        # if self.snake.is_running == False:
+        #     if key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
+        #         self.snake.is_running = True
+        #         self.next_direction = self.snake.snake[0].direction
+        #         self.snake.start_timer()
+
+        if key == pygame.K_UP and self.snake.snake[0].direction != self.snake.DOWN:
             self.next_direction = self.snake.UP
-        if key == pygame.K_DOWN:
+        elif key == pygame.K_DOWN and self.snake.snake[0].direction != self.snake.UP:
             self.next_direction = self.snake.DOWN
-        if key == pygame.K_LEFT:
+        elif key == pygame.K_LEFT and self.snake.snake[0].direction != self.snake.RIGHT:
             self.next_direction = self.snake.LEFT
-        if key == pygame.K_RIGHT:
+        elif key == pygame.K_RIGHT and self.snake.snake[0].direction != self.snake.LEFT:
             self.next_direction = self.snake.RIGHT
+        else:
+            return
+        if self.snake.is_running == False:
+            self.snake.is_running = True
+            self.snake.start_timer()
     def launch(self):
         self.run = True
         while self.run:
@@ -532,8 +547,7 @@ class Window:
             y=self.SCREEN_HEIGHT - 100,
             bg_default=self.theme['btn'],
             bg_hover=self.theme['btn-hover'],
-            func=self.switch_menu,
-            func_params="MAIN"
+            func=self.leave_game
         )
 
 
