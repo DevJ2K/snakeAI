@@ -4,6 +4,7 @@ import utils.Colors as Colors
 import random
 import time
 
+
 class SnakeError(Exception):
     pass
 
@@ -18,17 +19,41 @@ class Snake:
                              "or equal to 1.")
 
         self.WALL = {
-            'name': "WALL", 'char': 'W', 'color': Colors.BLACKHB, 'hex': "#3A3A3A"}
+            'name': "WALL",
+            'char': 'W',
+            'color': Colors.BLACKHB,
+            'hex': "#3A3A3A"
+        }
         self.HEAD = {
-            'name': "HEAD", 'char': 'H', 'color': Colors.MAGHB, 'hex': "#09dcf2"}
+            'name': "HEAD",
+            'char': 'H',
+            'color': Colors.MAGHB,
+            'hex': "#09dcf2"
+        }
         self.SNAKE_BODY = {
-            'name': "SNAKE_BODY", 'char': 'S', 'color': Colors.BLUEB, 'hex': "#0c00c3"}
+            'name': "SNAKE_BODY",
+            'char': 'S',
+            'color': Colors.BLUEB,
+            'hex': "#0c00c3"
+        }
         self.GREEN_APPLE = {
-            'name': "GREEN_APPLE", 'char': 'G', 'color': Colors.GREENHB, 'hex': "#50FF50"}
+            'name': "GREEN_APPLE",
+            'char': 'G',
+            'color': Colors.GREENHB,
+            'hex': "#50FF50"
+        }
         self.RED_APPLE = {
-            'name': "RED_APPLE", 'char': 'R', 'color': Colors.REDHB, 'hex': "#FF5050"}
+            'name': "RED_APPLE",
+            'char': 'R',
+            'color': Colors.REDHB,
+            'hex': "#FF5050"
+        }
         self.EMPTY_SPACE = {
-            'name': "EMPTY_SPACE", 'char': '0', 'color': Colors.BLACKB, 'hex': "#AAAAAA"}
+            'name': "EMPTY_SPACE",
+            'char': '0',
+            'color': Colors.BLACKB,
+            'hex': "#AAAAAA"
+        }
 
         self.UP = (-1, 0)
         self.DOWN = (1, 0)
@@ -189,7 +214,6 @@ class Snake:
         #     self.EMPTY_SPACE
         # ]
 
-
         if self.board[next_i][next_j] not in [
             self.GREEN_APPLE['char'],
             self.RED_APPLE['char'],
@@ -216,18 +240,24 @@ class Snake:
             self.red_apple_eat += 1
             self.snake_length -= 1
 
-        self.update_snake_nodes(new_direction=direction, new_node=apple==self.GREEN_APPLE)
+        self.update_snake_nodes(direction, apple == self.GREEN_APPLE)
         self.__place_snake()
         if apple is not None:
             self.__place_random_apple(apple)
         self.display_board()
         return True
 
-    def update_snake_nodes(self, new_direction: tuple[int, int], new_node: bool = False):
-        if new_node == False:
-            self.board[self.snake[-1].i][self.snake[-1].j] = self.EMPTY_SPACE['char']
+    def update_snake_nodes(
+            self,
+            new_direction: tuple[int, int],
+            new_node: bool = False
+    ):
+        if new_node is False:
+            last_node = self.snake[-1]
+            self.board[last_node.i][last_node.j] = self.EMPTY_SPACE['char']
         for i in range(len(self.snake) - 1, 0, -1):
-            self.snake[i].new_coordinate(self.snake[i - 1].i, self.snake[i - 1].j)
+            next_node = self.snake[i - 1]
+            self.snake[i].new_coordinate(next_node.i, next_node.j)
         self.snake[0].apply_direction(new_direction)
 
     def get_item_by_char(self, char: str) -> dict | None:
@@ -273,7 +303,6 @@ class Snake:
 
 if __name__ == "__main__":
     # from pprint import pprint
-    import time
 
     snake = Snake(size=10, snake_length=3)
     # snake._Snake__place_random_apple({})
@@ -287,7 +316,7 @@ if __name__ == "__main__":
     }
     while True:
         next_direction = input("Direction -> ")
-        if snake.next_frame(direction_list[next_direction.upper()]) == False:
+        if snake.next_frame(direction_list[next_direction.upper()]) is False:
             break
         snake.display_board(False)
     print(f"GAME OVER : {snake.green_apple_eat} GA | {snake.red_apple_eat} RA")

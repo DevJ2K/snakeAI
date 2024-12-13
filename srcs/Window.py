@@ -2,9 +2,9 @@ import pygame
 import pygame.gfxdraw
 from WindowTheme import WindowTheme
 from srcs.Snake import Snake
-from srcs.SnakeNode import SnakeNode
 from utils.pygame_utils import draw_bordered_rounded_rect
 from utils import my_cursors
+from window.window_menu import MENU_main
 import os
 
 
@@ -52,9 +52,11 @@ class Window:
 
     def current_menu(self):
         if self.menu == "MAIN":
-            self.MENU_main()
+            MENU_main(self)
         elif self.menu == "GAME_INTERFACE":
             self.GAME_interface()
+        elif self.menu == "COMPUTOR_MENU":
+            self.MENU_computor()
         else:
             pass
 
@@ -68,12 +70,12 @@ class Window:
     def handle_gameloop(self):
         tick = (self.tick * self.speed) % self.FPS
         last_tick = (self.last_tick * self.speed) % self.FPS
-        if self.snake.is_running == False:
+        if self.snake.is_running is False:
             return
         if self.next_direction is None:
             return
         if tick < last_tick:
-            if self.snake.next_frame(self.next_direction) == False:
+            if self.snake.next_frame(self.next_direction) is False:
                 self.handle_gameover()
                 self.snake.is_running = False
         # print(tick)
@@ -82,36 +84,31 @@ class Window:
         self.snake = Snake()
         self.switch_menu("MAIN")
 
-
     def handle_gameover(self):
-        if self.snake.is_running == True:
+        if self.snake.is_running is True:
             self.snake.game_over = True
             self.snake.is_running = False
             self.snake.end_timer()
 
     def handle_gamekey(self, key):
-        # print("HEE1")
-        if self.snake.game_over == True:
+        if self.snake.game_over is True:
             return
-        # if self.snake.is_running == False:
-        #     if key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
-        #         self.snake.is_running = True
-        #         self.next_direction = self.snake.snake[0].direction
-        #         self.snake.start_timer()
 
-        if key == pygame.K_UP and self.snake.snake[0].direction != self.snake.DOWN:
+        head = self.snake.snake[0]
+        if key == pygame.K_UP and head.direction != self.snake.DOWN:
             self.next_direction = self.snake.UP
-        elif key == pygame.K_DOWN and self.snake.snake[0].direction != self.snake.UP:
+        elif key == pygame.K_DOWN and head.direction != self.snake.UP:
             self.next_direction = self.snake.DOWN
-        elif key == pygame.K_LEFT and self.snake.snake[0].direction != self.snake.RIGHT:
+        elif key == pygame.K_LEFT and head.direction != self.snake.RIGHT:
             self.next_direction = self.snake.LEFT
-        elif key == pygame.K_RIGHT and self.snake.snake[0].direction != self.snake.LEFT:
+        elif key == pygame.K_RIGHT and head.direction != self.snake.LEFT:
             self.next_direction = self.snake.RIGHT
         else:
             return
-        if self.snake.is_running == False:
+        if self.snake.is_running is False:
             self.snake.is_running = True
             self.snake.start_timer()
+
     def launch(self):
         self.run = True
         while self.run:
@@ -235,9 +232,9 @@ class Window:
         width: int = None,
         height: int = None
     ):
-        repository_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        tmp_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        img = pygame.image.load(os.path.join(repository_path, "images", filename))
+        img = pygame.image.load(os.path.join(tmp_path, "images", filename))
 
         x_coord = x
         y_coord = y
@@ -358,7 +355,6 @@ class Window:
         #         border_radius -= 8
         # print(border_radius)
 
-
         if append:
             self.buttons.append(
                 {
@@ -388,14 +384,48 @@ class Window:
             func=self.start_new_snake,
             func_params=None
         )
+        self.add_button(
+            text="COMPUTOR",
+            bg_default=self.theme['btn'],
+            bg_hover=self.theme['btn-hover'],
+            func=self.switch_menu,
+            func_params="COMPUTOR_MENU"
+        )
 
         self.add_button(
             text="LEAVE",
-            y=self.SCREEN_HEIGHT / 2,
+            y=self.SCREEN_HEIGHT / 2 + 80,
             bg_default=self.theme['btn'],
             bg_hover=self.theme['btn-hover'],
             func=self.exit_window
         )
+
+    def MENU_computor(self):
+        self.add_button(
+            text="VISUALIZATION",
+            y=self.SCREEN_HEIGHT / 2 - 140,
+            bg_default=self.theme['btn'],
+            bg_hover=self.theme['btn-hover'],
+            func=self.start_new_snake,
+            func_params=None
+        )
+        self.add_button(
+            text="TRAINING",
+            bg_default=self.theme['btn'],
+            bg_hover=self.theme['btn-hover'],
+            func=self.start_new_snake,
+            func_params=None
+        )
+
+        self.add_button(
+            text="BACK",
+            y=self.SCREEN_HEIGHT / 2 + 80,
+            bg_default=self.theme['btn'],
+            bg_hover=self.theme['btn-hover'],
+            func=self.switch_menu,
+            func_params="MAIN"
+        )
+        pass
 
     def draw_on_board(
             self,
@@ -439,12 +469,6 @@ class Window:
         DEFAULT_HEIGHT = 400
         BORDER_SIZE = 6
 
-
-        # text_rect = text_render.get_rect()
-        # if x is None and y is None:
-        #     x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
-        #     y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
-
         WIDTH = DEFAULT_WIDTH - (2 * BORDER_SIZE)
         HEIGHT = DEFAULT_HEIGHT - (2 * BORDER_SIZE)
         TILE_X = round(WIDTH / size)
@@ -454,15 +478,15 @@ class Window:
         start_y = self.SCREEN_HEIGHT / 2 - (HEIGHT / 2)
 
         y = self.SCREEN_HEIGHT / 2 - (HEIGHT / 2)
-        pattern_bool = 0
+        bg_pattern = 0
         if draw_snake:
             for i in range(size):
                 x = self.SCREEN_WIDTH / 2 - (WIDTH / 2)
                 for j in range(size):
-                    pattern_bool = 1 - pattern_bool
+                    bg_pattern = 1 - bg_pattern
                     char = self.snake.get_board_without_border()[i][j]
                     item = self.snake.get_item_by_char(char)
-                    self.draw_on_board(x, y, TILE_X, TILE_Y, item, pattern_bool)
+                    self.draw_on_board(x, y, TILE_X, TILE_Y, item, bg_pattern)
                     # pygame.draw.rect(
                     #     self.canvas,
                     #     self.theme[f"board{1 + pattern_bool}"],
@@ -470,7 +494,7 @@ class Window:
                     # )
                     x += TILE_X
                 if size % 2 == 0:
-                    pattern_bool = 1 - pattern_bool
+                    bg_pattern = 1 - bg_pattern
                 y += TILE_Y
 
         # outline_border
@@ -495,23 +519,23 @@ class Window:
 
     def display_game_info(self, y: int):
         x_center = self.SCREEN_WIDTH / 2
-        self.add_image("len.png", x=x_center - 160, y=y, width=48, height=32)
-        self.add_text(str(self.snake.snake_length), x=x_center - 100, y=y)
+        self.add_image("len.png", x_center - 160, y, 48, 32)
+        self.add_text(str(self.snake.snake_length), x_center - 100, y)
 
-        self.add_image("timer.png", x=x_center - 40, y=y, width=32, height=32)
-        self.add_text(f"{self.snake.get_timer():.2f}s", x=x_center + 2, y=y)
-        # self.add_text(str(self.snake.green_apple_eat), x=x_center - 50, y=y)
+        self.add_image("timer.png", x_center - 40, y, 32, 32)
+        self.add_text(f"{self.snake.get_timer():.2f}s", x_center + 2, y)
 
-        self.add_image("trophy.png", x=x_center + 100, y=y, width=32, height=32)
-        self.add_text(str(self.snake.max_snake_length), x=x_center + 144, y=y)
-
+        self.add_image("trophy.png", x_center + 100, y, 32, 32)
+        self.add_text(str(self.snake.max_snake_length), x_center + 144, y)
 
     def GAME_interface(self):
 
-        x_size, y_size, x_start, y_start = self.create_snakeboard(size=self.snake.size, draw_snake=self.snake.game_over==False)
-        if self.snake.is_running == False and self.snake.game_over == False:
+        draw_snake = self.snake.game_over is False
+        value = self.create_snakeboard(self.snake.size, draw_snake)
+        x_size, y_size, x_start, y_start = value
+        if self.snake.is_running is False and self.snake.game_over is False:
             self.add_text("Press any direction to start", y=120)
-        elif self.snake.is_running == False and self.snake.game_over == True:
+        elif self.snake.is_running is False and self.snake.game_over is True:
             pygame.draw.rect(
                 self.canvas,
                 self.theme['board2'],
@@ -528,7 +552,7 @@ class Window:
                     "opacity": 42,
                     "x": 4,
                     "y": 4,
-            })
+                })
             self.display_game_info(y=self.SCREEN_HEIGHT / 2 - 20)
             self.add_button(
                 "REPLAY",
@@ -549,7 +573,6 @@ class Window:
             bg_hover=self.theme['btn-hover'],
             func=self.leave_game
         )
-
 
 
 if __name__ == "__main__":
