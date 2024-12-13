@@ -1,11 +1,11 @@
+import os
 import pygame
 import pygame.gfxdraw
 from WindowTheme import WindowTheme
 from srcs.Snake import Snake
-from utils.pygame_utils import draw_bordered_rounded_rect
 from utils import my_cursors
-from window.window_menu import MENU_main
-import os
+import window.window_menu as win_screen
+import window.window_utils as win_utils
 
 
 class Window:
@@ -52,11 +52,11 @@ class Window:
 
     def current_menu(self):
         if self.menu == "MAIN":
-            MENU_main(self)
+            win_screen.MENU_main(self)
         elif self.menu == "GAME_INTERFACE":
-            self.GAME_interface()
+            win_screen.GAME_interface(self)
         elif self.menu == "COMPUTOR_MENU":
-            self.MENU_computor()
+            win_screen.MENU_computor(self)
         else:
             pass
 
@@ -91,10 +91,12 @@ class Window:
             self.snake.end_timer()
 
     def handle_gamekey(self, key):
+        head = self.snake.snake[0]
+        if window.snake.is_running is False and window.snake.game_over is True:
+            if key == pygame.K_SPACE or key == pygame.K_RETURN:
+                self.start_new_snake()
         if self.snake.game_over is True:
             return
-
-        head = self.snake.snake[0]
         if key == pygame.K_UP and head.direction != self.snake.DOWN:
             self.next_direction = self.snake.UP
         elif key == pygame.K_DOWN and head.direction != self.snake.UP:
@@ -172,7 +174,8 @@ class Window:
                         else:
                             button['func']()
 
-            self.add_button(
+            win_utils.add_button(
+                window,
                 button['text'],
                 button['x'],
                 button['y'],
@@ -211,7 +214,8 @@ class Window:
 
             x += pattern_size
 
-        self.add_text(
+        win_utils.add_text(
+            window,
             text="SNAKE",
             y=32,
             color="#FFFFFF",
@@ -223,209 +227,6 @@ class Window:
             },
             font=self.fontTitle
         )
-
-    def add_image(
-        self,
-        filename: str,
-        x: int = None,
-        y: int = None,
-        width: int = None,
-        height: int = None
-    ):
-        tmp_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-        img = pygame.image.load(os.path.join(tmp_path, "images", filename))
-
-        x_coord = x
-        y_coord = y
-
-        img_rect = img.get_rect()
-        if x is None and y is None:
-            x_coord = (self.SCREEN_WIDTH / 2) - (img_rect.width / 2)
-            y_coord = (self.SCREEN_HEIGHT / 2) - (img_rect.height / 2)
-        elif x is None:
-            x_coord = (self.SCREEN_WIDTH / 2) - (img_rect.width / 2)
-        elif y is None:
-            y_coord = (self.SCREEN_HEIGHT / 2) - (img_rect.height / 2)
-
-        width = img_rect.width if width is None else width
-        height = img_rect.height if height is None else height
-
-        img = pygame.transform.scale(img, (width, height))
-
-        self.canvas.blit(img, pygame.Rect(x_coord, y_coord, width, height))
-
-    def add_text(
-            self,
-            text: str,
-            x: int = None,
-            y: int = None,
-            color: str = "#FFFFFF",
-            shadow: dict = None,
-            font: pygame.font.Font = None
-    ):
-        if font is None:
-            font = self.fontText
-        text_render = font.render(text, True, color)
-        x_coord = x
-        y_coord = y
-
-        text_rect = text_render.get_rect()
-        if x is None and y is None:
-            x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
-            y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
-        elif x is None:
-            x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
-        elif y is None:
-            y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
-
-        if shadow:
-            text_shadow = font.render(text, True, shadow['color'])
-            text_shadow.set_alpha(shadow['opacity'])
-            shadow_x = x_coord + shadow['x']
-            shadow_y = y_coord + shadow['y']
-            self.canvas.blit(text_shadow, [shadow_x, shadow_y])
-        self.canvas.blit(text_render, [x_coord, y_coord])
-
-    def add_button(
-            self,
-            text: str,
-            x: int = None,
-            y: int = None,
-            font: pygame.font.Font = None,
-            color: str = "#FFFFFF",
-            bg_default: str = "#000000",
-            bg_hover: str = "#4F4F4F",
-            stroke: str = "#FFFFFF",
-            border_radius: int = 32,
-            func: callable = print,
-            func_params: tuple = None,
-            hover: bool = False,
-            append: bool = True
-    ):
-
-        # Padding var
-        px = 32
-        py = 12
-        if font is None:
-            font = self.fontButton
-        text_render = font.render(text, True, color)
-        x_coord = x
-        y_coord = y
-
-        bg_color = bg_hover if hover is True else bg_default
-        text_rect = text_render.get_rect()
-        if x is None and y is None:
-            x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
-            y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
-        elif x is None:
-            x_coord = (self.SCREEN_WIDTH / 2) - (text_rect.width / 2)
-        elif y is None:
-            y_coord = (self.SCREEN_HEIGHT / 2) - (text_rect.height / 2)
-
-        # rect_bg = pygame.draw.rect(self.canvas, bg_color, pygame.Rect(
-        #     x_coord - px, y_coord - py,
-        #     text_rect.width + (px * 2),
-        #     text_rect.height + (py * 2)),
-        #     0,
-        #     64
-        # )
-
-        # def draw_circle(surface, x, y, radius, color):
-        #     gfxdraw.aacircle(surface, x, y, radius, color)
-        #     gfxdraw.filled_circle(surface, x, y, radius, color)
-
-        button_rect = pygame.Rect(
-            x_coord - px, y_coord - py,
-            text_rect.width + (px * 2),
-            text_rect.height + (py * 2))
-
-        draw_bordered_rounded_rect(
-            self.canvas,
-            button_rect,
-            pygame.Color(bg_color),
-            pygame.Color(stroke),
-            border_radius,
-            5
-        )
-        # while True:
-        #     try:
-        #         break
-        #     except:
-        #         border_radius -= 8
-        # print(border_radius)
-
-        if append:
-            self.buttons.append(
-                {
-                    "text": text,
-                    "x": x,
-                    "y": y,
-                    "color": color,
-                    "font": font,
-                    "bg_default": bg_default,
-                    "bg_hover": bg_hover,
-                    "stroke": stroke,
-                    "border_radius": border_radius,
-                    "hitbox": button_rect,
-                    "func": func,
-                    "func_params": func_params
-                }
-            )
-
-        self.canvas.blit(text_render, [x_coord, y_coord])
-
-    def MENU_main(self):
-        self.add_button(
-            text="PLAY",
-            y=self.SCREEN_HEIGHT / 2 - 140,
-            bg_default=self.theme['btn'],
-            bg_hover=self.theme['btn-hover'],
-            func=self.start_new_snake,
-            func_params=None
-        )
-        self.add_button(
-            text="COMPUTOR",
-            bg_default=self.theme['btn'],
-            bg_hover=self.theme['btn-hover'],
-            func=self.switch_menu,
-            func_params="COMPUTOR_MENU"
-        )
-
-        self.add_button(
-            text="LEAVE",
-            y=self.SCREEN_HEIGHT / 2 + 80,
-            bg_default=self.theme['btn'],
-            bg_hover=self.theme['btn-hover'],
-            func=self.exit_window
-        )
-
-    def MENU_computor(self):
-        self.add_button(
-            text="VISUALIZATION",
-            y=self.SCREEN_HEIGHT / 2 - 140,
-            bg_default=self.theme['btn'],
-            bg_hover=self.theme['btn-hover'],
-            func=self.start_new_snake,
-            func_params=None
-        )
-        self.add_button(
-            text="TRAINING",
-            bg_default=self.theme['btn'],
-            bg_hover=self.theme['btn-hover'],
-            func=self.start_new_snake,
-            func_params=None
-        )
-
-        self.add_button(
-            text="BACK",
-            y=self.SCREEN_HEIGHT / 2 + 80,
-            bg_default=self.theme['btn'],
-            bg_hover=self.theme['btn-hover'],
-            func=self.switch_menu,
-            func_params="MAIN"
-        )
-        pass
 
     def draw_on_board(
             self,
@@ -519,60 +320,14 @@ class Window:
 
     def display_game_info(self, y: int):
         x_center = self.SCREEN_WIDTH / 2
-        self.add_image("len.png", x_center - 160, y, 48, 32)
-        self.add_text(str(self.snake.snake_length), x_center - 100, y)
+        win_utils.add_image(window, "len.png", x_center - 160, y, 48, 32)
+        win_utils.add_text(window, str(self.snake.snake_length), x_center - 100, y)
 
-        self.add_image("timer.png", x_center - 40, y, 32, 32)
-        self.add_text(f"{self.snake.get_timer():.2f}s", x_center + 2, y)
+        win_utils.add_image(window, "timer.png", x_center - 40, y, 32, 32)
+        win_utils.add_text(window, f"{self.snake.get_timer():.2f}s", x_center + 2, y)
 
-        self.add_image("trophy.png", x_center + 100, y, 32, 32)
-        self.add_text(str(self.snake.max_snake_length), x_center + 144, y)
-
-    def GAME_interface(self):
-
-        draw_snake = self.snake.game_over is False
-        value = self.create_snakeboard(self.snake.size, draw_snake)
-        x_size, y_size, x_start, y_start = value
-        if self.snake.is_running is False and self.snake.game_over is False:
-            self.add_text("Press any direction to start", y=120)
-        elif self.snake.is_running is False and self.snake.game_over is True:
-            pygame.draw.rect(
-                self.canvas,
-                self.theme['board2'],
-                pygame.Rect(x_start, y_start, x_size, y_size)
-            )
-            self.add_text("Game is over !", y=120)
-
-            self.add_text(
-                "Stats",
-                y=self.SCREEN_HEIGHT / 2 - 88,
-                font=self.fontButton,
-                shadow={
-                    "color": self.theme['accent'],
-                    "opacity": 42,
-                    "x": 4,
-                    "y": 4,
-                })
-            self.display_game_info(y=self.SCREEN_HEIGHT / 2 - 20)
-            self.add_button(
-                "REPLAY",
-                y=self.SCREEN_HEIGHT / 2 + 42,
-                font=self.fontText,
-                bg_default=self.theme['btn'],
-                bg_hover=self.theme['btn-hover'],
-                border_radius=16,
-                func=self.start_new_snake,
-                func_params=None
-            )
-        else:
-            self.display_game_info(y=120)
-        self.add_button(
-            text="LEAVE",
-            y=self.SCREEN_HEIGHT - 100,
-            bg_default=self.theme['btn'],
-            bg_hover=self.theme['btn-hover'],
-            func=self.leave_game
-        )
+        win_utils.add_image(window, "trophy.png", x_center + 100, y, 32, 32)
+        win_utils.add_text(window, str(self.snake.max_snake_length), x_center + 144, y)
 
 
 if __name__ == "__main__":
