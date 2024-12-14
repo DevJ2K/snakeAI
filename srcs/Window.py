@@ -319,15 +319,16 @@ class Window:
         return (TILE_X * size, TILE_Y * size, start_x, start_y)
 
     def display_game_info(self, y: int):
-        x_center = self.SCREEN_WIDTH / 2
-        win_utils.add_image(window, "len.png", x_center - 160, y, 48, 32)
-        win_utils.add_text(window, str(self.snake.snake_length), x_center - 100, y)
+        x = self.SCREEN_WIDTH / 2
+        win_utils.add_image(window, "len.png", x - 160, y, 48, 32)
+        win_utils.add_text(window, str(self.snake.snake_length), x - 100, y)
 
-        win_utils.add_image(window, "timer.png", x_center - 40, y, 32, 32)
-        win_utils.add_text(window, f"{self.snake.get_timer():.2f}s", x_center + 2, y)
+        win_utils.add_image(window, "timer.png", x - 40, y, 32, 32)
+        win_utils.add_text(window, f"{self.snake.get_timer():.2f}s", x + 2, y)
 
-        win_utils.add_image(window, "trophy.png", x_center + 100, y, 32, 32)
-        win_utils.add_text(window, str(self.snake.max_snake_length), x_center + 144, y)
+        win_utils.add_image(window, "trophy.png", x + 100, y, 32, 32)
+        tmp_x = x + 144
+        win_utils.add_text(window, str(self.snake.max_snake_length), tmp_x, y)
 
 
 if __name__ == "__main__":

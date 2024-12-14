@@ -1,11 +1,11 @@
 from Window import Window
-from window.window_utils import add_button, add_image, add_text
+from window.window_utils import add_button, add_text
 import pygame
 
 
-#####################################
-### MAIN MENU #######################
-#####################################
+###################################
+# MAIN MENU #######################
+###################################
 def MENU_main(window: Window):
     add_button(
         window=window,
@@ -34,9 +34,10 @@ def MENU_main(window: Window):
         func=window.exit_window
     )
 
-#####################################
-### GAME INTERFACE ##################
-#####################################
+
+###################################
+# GAME INTERFACE ##################
+###################################
 def GAME_interface(window: Window):
     draw_snake = window.snake.game_over is False
     value = window.create_snakeboard(window.snake.size, draw_snake)
@@ -85,9 +86,10 @@ def GAME_interface(window: Window):
         func=window.leave_game
     )
 
-#####################################
-### MENU COMPUTOR ###################
-#####################################
+
+###################################
+# MENU COMPUTOR ###################
+###################################
 def MENU_computor(window: Window):
     add_button(
         window=window,

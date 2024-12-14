@@ -107,6 +107,7 @@ def add_image(
 
     window.canvas.blit(img, pygame.Rect(x_coord, y_coord, width, height))
 
+
 def add_text(
         window,
         text: str,
