@@ -2,6 +2,11 @@ import os
 import pygame
 import pygame.gfxdraw
 from WindowTheme import WindowTheme
+
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# print(sys.path)
+
 from srcs.Snake import Snake
 from utils import my_cursors
 import window.window_menu as win_screen
@@ -36,7 +41,7 @@ class Window:
         self.last_tick = 0
         self.theme = theme.get()
 
-        self.menu = "COMPUTOR_TRAINING_SETTINGS"
+        self.menu = "GAME_INTERFACE"
 
         self.snake = Snake(size=10, snake_length=3)
         self.max_len = self.snake.max_snake_length
@@ -251,17 +256,25 @@ class Window:
                 pygame.Rect(x, y, TILE_X, TILE_Y)
             )
         elif item['name'] in ["GREEN_APPLE", "RED_APPLE"]:
+            px = 6
+            py = 6
             pygame.draw.rect(
                 self.canvas,
                 item['hex'],
-                pygame.Rect(x, y, TILE_X, TILE_Y)
+                pygame.Rect(x + px / 2, y + py / 2, TILE_X - px, TILE_Y - py),
+                0,
+                border_bottom_left_radius=16,
+                border_bottom_right_radius=16,
+                border_top_left_radius=12,
+                border_top_right_radius=12
             )
         elif item['name'] == "EMPTY_SPACE":
-            pygame.draw.rect(
-                self.canvas,
-                self.theme[f"board{1 + pattern_bool}"],
-                pygame.Rect(x, y, TILE_X, TILE_Y)
-            )
+            pass
+            # pygame.draw.rect(
+            #     self.canvas,
+            #     self.theme[f"board{1 + pattern_bool}"],
+            #     pygame.Rect(x, y, TILE_X, TILE_Y)
+            # )
         else:
             pygame.draw.rect(
                 self.canvas,
@@ -292,12 +305,12 @@ class Window:
                     bg_pattern = 1 - bg_pattern
                     char = self.snake.get_board_without_border()[i][j]
                     item = self.snake.get_item_by_char(char)
+                    pygame.draw.rect(
+                        self.canvas,
+                        self.theme[f"board{1 + bg_pattern}"],
+                        pygame.Rect(x, y, TILE_X, TILE_Y)
+                    )
                     self.draw_on_board(x, y, TILE_X, TILE_Y, item, bg_pattern)
-                    # pygame.draw.rect(
-                    #     self.canvas,
-                    #     self.theme[f"board{1 + pattern_bool}"],
-                    #     pygame.Rect(x, y, TILE_X, TILE_Y)
-                    # )
                     x += TILE_X
                 if size % 2 == 0:
                     bg_pattern = 1 - bg_pattern

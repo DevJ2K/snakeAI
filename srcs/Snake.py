@@ -28,25 +28,25 @@ class Snake:
             'name': "HEAD",
             'char': 'H',
             'color': Colors.MAGHB,
-            'hex': "#09dcf2"
+            'hex': "#16f4ff"
         }
         self.SNAKE_BODY = {
             'name': "SNAKE_BODY",
             'char': 'S',
             'color': Colors.BLUEB,
-            'hex': "#0c00c3"
+            'hex': "#16aaff"
         }
         self.GREEN_APPLE = {
             'name': "GREEN_APPLE",
             'char': 'G',
             'color': Colors.GREENHB,
-            'hex': "#50FF50"
+            'hex': "#16ee3d"
         }
         self.RED_APPLE = {
             'name': "RED_APPLE",
             'char': 'R',
             'color': Colors.REDHB,
-            'hex': "#FF5050"
+            'hex': "#ee2016"
         }
         self.EMPTY_SPACE = {
             'name': "EMPTY_SPACE",
