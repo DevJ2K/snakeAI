@@ -36,7 +36,7 @@ class Window:
         self.last_tick = 0
         self.theme = theme.get()
 
-        self.menu = "MAIN"
+        self.menu = "COMPUTOR_TRAINING_SETTINGS"
 
         self.snake = Snake(size=10, snake_length=3)
         self.max_len = self.snake.max_snake_length
@@ -57,7 +57,12 @@ class Window:
             win_screen.GAME_interface(self)
         elif self.menu == "COMPUTOR_MENU":
             win_screen.MENU_computor(self)
+        elif self.menu == "COMPUTOR_VISUALIZATION_SETTINGS":
+            win_screen.MENU_computor_visualization(self)
+        elif self.menu == "COMPUTOR_TRAINING_SETTINGS":
+            win_screen.MENU_computor_training(self)
         else:
+            print(f"No menu select. '{self.menu}'")
             pass
 
     def start_new_snake(self):

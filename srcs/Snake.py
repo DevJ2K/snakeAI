@@ -224,7 +224,7 @@ class Snake:
         if self.board[next_i][next_j] == self.GREEN_APPLE['char']:
             apple = self.GREEN_APPLE
             self.snake.append(self.__new_snake_node())
-            print("GREENAPPLE", next_i, next_j)
+            # print("GREENAPPLE", next_i, next_j)
             self.green_apple_eat += 1
             self.snake_length += 1
             if self.snake_length > self.max_snake_length:
@@ -234,7 +234,7 @@ class Snake:
                 self.snake_length -= 1
                 return False
             apple = self.RED_APPLE
-            print("REDAPPLE", next_i, next_j)
+            # print("REDAPPLE", next_i, next_j)
             pop_node = self.snake.pop()
             self.board[pop_node.i][pop_node.j] = self.EMPTY_SPACE['char']
             self.red_apple_eat += 1
@@ -244,7 +244,7 @@ class Snake:
         self.__place_snake()
         if apple is not None:
             self.__place_random_apple(apple)
-        self.display_board()
+        # self.display_board()
         return True
 
     def update_snake_nodes(
