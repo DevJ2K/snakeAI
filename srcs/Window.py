@@ -8,7 +8,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # print(sys.path)
 
 from srcs.Snake import Snake
-from utils import my_cursors
 import window.window_menu as win_screen
 import window.window_utils as win_utils
 
@@ -41,7 +40,7 @@ class Window:
         self.last_tick = 0
         self.theme = theme.get()
 
-        self.menu = "GAME_INTERFACE"
+        self.menu = "COMPUTOR_TRAINING_SETTINGS"
 
         self.snake = Snake(size=10, snake_length=3)
         self.max_len = self.snake.max_snake_length
@@ -145,67 +144,13 @@ class Window:
 
             if self.menu == "GAME_INTERFACE":
                 self.handle_gameloop()
-            self.update_button(pygame.mouse.get_pos(), onclick)
+            win_utils.update_button(self, pygame.mouse.get_pos(), onclick)
 
             pygame.display.flip()
             self.clock.tick(self.FPS)
 
     def exit_window(self):
         self.run = False
-
-    def update_button(self, pos: tuple[int, int], onclick: bool = False):
-        # {
-        #     "text": text,
-        #     "x": x,
-        #     "y": y,
-        #     "color": color,
-        #     "bg_color": bg_color,
-        #     "stroke": stroke,
-        #     "hitbox": button_hitbox,
-        #     "func": func
-        # }
-        # test: pygame.Rect = draw_bordered_rounded_rect()
-        final_hover = False
-        for button in self.buttons:
-            hover = False
-            if button['hitbox'].collidepoint(pos):
-                cursor_color = self.canvas.get_at(pygame.mouse.get_pos())
-                color_list = [
-                    pygame.Color(self.theme['bg1']),
-                    pygame.Color(self.theme['bg2'])
-                ]
-                if cursor_color not in color_list:
-                    # print(f"Collisions with {button['text']}")
-                    hover = True
-                    final_hover = True
-                    if onclick:
-                        if button['func_params']:
-                            button['func'](button['func_params'])
-                        else:
-                            button['func']()
-
-            win_utils.add_button(
-                window,
-                button['text'],
-                button['x'],
-                button['y'],
-                button['font'],
-                button['color'],
-                button['bg_default'],
-                button['bg_hover'],
-                button['stroke'],
-                button['border_radius'],
-                button['func'],
-                button['func_params'],
-                hover,
-                False,
-            )
-        if final_hover:
-            # pygame.mouse.set_cursor(pygame.cursors.tri_left)
-            hover_cursor = pygame.cursors.compile(my_cursors.hover_strings)
-            pygame.mouse.set_cursor((24, 16), (0, 0), *hover_cursor)
-        else:
-            pygame.mouse.set_cursor(pygame.cursors.arrow)
 
     def create_background(self, pattern_size: int = 24):
         pattern_bool = 0

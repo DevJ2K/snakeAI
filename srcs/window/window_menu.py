@@ -159,7 +159,7 @@ def MENU_computor_training(window: Window):
         text="146",
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
-        func=print,
+        func=None,
         func_params="Session number",
         font=window.fontText,
         border_radius=16

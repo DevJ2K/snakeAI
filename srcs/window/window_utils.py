@@ -1,7 +1,53 @@
 # from Window import Window
+from utils import my_cursors
 from utils.pygame_utils import draw_bordered_rounded_rect
+# import window.window_utils as win_utils
 import pygame
 import os
+
+
+def update_button(window, pos: tuple[int, int], onclick: bool = False):
+    final_hover = False
+    for button in window.buttons:
+        hover = False
+        if button['hitbox'].collidepoint(pos) and button['func']:
+            cursor_color = window.canvas.get_at(pygame.mouse.get_pos())
+            color_list = [
+                pygame.Color(window.theme['bg1']),
+                pygame.Color(window.theme['bg2'])
+            ]
+            if cursor_color not in color_list:
+                # print(f"Collisions with {button['text']}")
+                hover = True
+                final_hover = True
+                if onclick:
+                    if button['func_params']:
+                        button['func'](button['func_params'])
+                    else:
+                        button['func']()
+
+        add_button(
+            window,
+            button['text'],
+            button['x'],
+            button['y'],
+            button['font'],
+            button['color'],
+            button['bg_default'],
+            button['bg_hover'],
+            button['stroke'],
+            button['border_radius'],
+            button['func'],
+            button['func_params'],
+            hover,
+            False,
+        )
+    if final_hover:
+        # pygame.mouse.set_cursor(pygame.cursors.tri_left)
+        hover_cursor = pygame.cursors.compile(my_cursors.hover_strings)
+        pygame.mouse.set_cursor((24, 16), (0, 0), *hover_cursor)
+    else:
+        pygame.mouse.set_cursor(pygame.cursors.arrow)
 
 
 def add_button(
@@ -30,6 +76,8 @@ def add_button(
     x_coord = x
     y_coord = y
 
+    if func is None:
+        hover = False
     bg_color = bg_hover if hover is True else bg_default
     text_rect = text_render.get_rect()
     if x is None and y is None:
