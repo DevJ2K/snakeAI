@@ -342,6 +342,17 @@ class Window:
         else:
             self.training.model = filename
 
+    def decrease_board_size(self):
+        if self.training.board_size == 10:
+            return
+        else:
+            self.training.board_size -= 2
+
+    def increase_board_size(self):
+        if self.training.board_size == 20:
+            return
+        else:
+            self.training.board_size += 2
 
 if __name__ == "__main__":
     window = Window(title="SnakeAI", size=(1000, 800))

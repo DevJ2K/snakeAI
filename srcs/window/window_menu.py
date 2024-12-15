@@ -168,7 +168,7 @@ def MENU_computor_training(window: Window):
     add_button(
         window=window,
         y=window.SCREEN_HEIGHT / 2 - 140,
-        text="10",
+        text=str(window.training.board_size),
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
         func=None,
@@ -186,8 +186,8 @@ def MENU_computor_training(window: Window):
         direction="LEFT",
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
-        func=print,
-        func_params="Left triangle button",
+        func=window.decrease_board_size,
+        func_params=None,
     )
     add_triangle_button(
         window=window,
@@ -198,8 +198,8 @@ def MENU_computor_training(window: Window):
         direction="RIGHT",
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
-        func=print,
-        func_params="Right triangle button",
+        func=window.increase_board_size,
+        func_params=None,
     )
 
     add_text(
