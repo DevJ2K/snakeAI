@@ -31,7 +31,7 @@ class Window:
         self.ROOT_PATH = ROOT_PATH
         self.SCREEN_WIDTH = size[0]
         self.SCREEN_HEIGHT = size[1]
-
+        self.MAX_SESSIONS = 9999
         # print(platform.system())
         if platform.system() == "Darwin":
             self.tk = Tk()
@@ -59,7 +59,7 @@ class Window:
         self.menu = "COMPUTOR_TRAINING_SETTINGS"
 
         self.snake = Snake(size=10, snake_length=3)
-        self.training = Training(board_size=10, sessions=3, model=None, learn=False)
+        self.training = Training(board_size=10, sessions_number=1, model=None, learn=False)
         self.max_len = self.snake.max_snake_length
 
         self.next_direction = None
@@ -68,6 +68,9 @@ class Window:
         # Window Interface Handling
         self.buttons = []
         self.triangle_buttons = []
+
+        self.is_editing_session_num: bool = False
+        self.session_num_display: str = str(self.training.sessions_number)
 
     def get_font(self, size: int) -> pygame.font.Font:
         return pygame.font.Font(os.path.join(self.ROOT_PATH, self.font), size)
@@ -141,6 +144,38 @@ class Window:
             self.snake.is_running = True
             self.snake.start_timer()
 
+    def handle_session_typing(self, key):
+        if key == pygame.K_ESCAPE or key == pygame.K_RETURN:
+            self.is_editing_session_num = False
+            if self.session_num_display == "...":
+                self.session_num_display = "1"
+            self.training.sessions_number = int(self.session_num_display)
+
+        if key == pygame.K_BACKSPACE:
+            if self.session_num_display == "...":
+                return
+            new_number = int(self.session_num_display) // 10
+            if new_number <= 0:
+                self.session_num_display = "..."
+            else:
+                self.session_num_display = str(new_number)
+
+        if 48 <= key and key <= 57:
+            number = int(chr(key))
+            if self.session_num_display == "...":
+                if number != 0:
+                    self.session_num_display = str(number)
+            else:
+                new_number = int(self.session_num_display) * 10 + number
+                # print(int(self.session_num_display) * 10, number)
+                if new_number >= self.MAX_SESSIONS:
+                    new_number = self.MAX_SESSIONS
+                    self.session_num_display = str(new_number)
+                elif new_number <= 0:
+                    self.session_num_display = "..."
+                else:
+                    self.session_num_display = str(new_number)
+
     def launch(self):
         self.run = True
         while self.run:
@@ -155,14 +190,19 @@ class Window:
                 if event.type == pygame.QUIT:
                     self.exit_window()
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
+                    if event.key == pygame.K_ESCAPE and self.is_editing_session_num is False:
                         self.exit_window()
                     if self.menu == "GAME_INTERFACE":
                         self.handle_gamekey(event.key)
+                    if self.is_editing_session_num is True:
+                        self.handle_session_typing(event.key)
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
-                        onclick = True
+                        if self.is_editing_session_num == True:
+                            self.handle_session_typing(pygame.K_ESCAPE)
+                        else:
+                            onclick = True
 
             if self.menu == "GAME_INTERFACE":
                 self.handle_gameloop()
@@ -353,6 +393,10 @@ class Window:
             return
         else:
             self.training.board_size += 2
+
+    def edit_sessions_number(self):
+        self.is_editing_session_num = True
+        self.session_num_display = "..."
 
 if __name__ == "__main__":
     window = Window(title="SnakeAI", size=(1000, 800))

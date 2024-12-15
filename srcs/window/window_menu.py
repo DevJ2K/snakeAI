@@ -214,16 +214,20 @@ def MENU_computor_training(window: Window):
         },
         font=font_text
     )
+    if window.is_editing_session_num:
+        bg_default = window.theme['btn-hover']
+    else:
+        bg_default = window.theme['btn']
     add_button(
         window=window,
         y=window.SCREEN_HEIGHT / 2 - 20,
-        text="146",
-        bg_default=window.theme['btn'],
+        text=window.session_num_display,
+        bg_default=bg_default,
         bg_hover=window.theme['btn-hover'],
-        func=None,
-        func_params="Session number",
+        func=window.edit_sessions_number,
+        func_params=None,
         font=window.fontText,
-        border_radius=24
+        border_radius=24,
     )
 
     add_text(

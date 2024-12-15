@@ -6,13 +6,13 @@ class Training:
     def __init__(
         self,
         board_size: int = 10,
-        sessions: int = 1,
+        sessions_number: int = 1,
         model: str = None,
         learn: bool = False
     ) -> None:
 
         self.board_size: int = board_size
-        self.sessions: int = sessions
+        self.sessions_number: int = sessions_number
         self.model: str = model
         self.learn: bool = learn
 
