@@ -2,12 +2,15 @@ import os
 import pygame
 import pygame.gfxdraw
 from WindowTheme import WindowTheme
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # print(sys.path)
 
 from srcs.Snake import Snake
+from srcs.Training import Training
 import window.window_menu as win_screen
 import window.window_utils as win_utils
 
@@ -45,6 +48,7 @@ class Window:
         self.menu = "COMPUTOR_TRAINING_SETTINGS"
 
         self.snake = Snake(size=10, snake_length=3)
+        self.training = Training(board_size=10, sessions=3, model=None, learn=False)
         self.max_len = self.snake.max_snake_length
 
         self.next_direction = None
@@ -299,6 +303,22 @@ class Window:
         win_utils.add_image(window, "trophy.png", x + 100, y, 32, 32)
         tmp_x = x + 144
         win_utils.add_text(window, str(self.snake.max_snake_length), tmp_x, y)
+
+
+    def get_model(self):
+        # print(f"Calling loop {self.clock}")
+        return str(self.training.model)
+
+    def select_model(self):
+        tmp_win = Tk()
+        tmp_win.withdraw()
+        filename = askopenfilename()
+        self.buttons.clear()
+        tmp_win.destroy()
+        if filename == '':
+            return
+        else:
+            self.training.model = filename
 
 
 if __name__ == "__main__":

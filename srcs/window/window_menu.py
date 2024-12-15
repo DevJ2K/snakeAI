@@ -241,11 +241,10 @@ def MENU_computor_training(window: Window):
     add_button(
         window=window,
         y=window.SCREEN_HEIGHT / 2 + 100,
-        text="None",
+        text=window.training.get_model_name(20),
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
-        func=None,
-        func_params="Session number",
+        func=window.select_model,
         font=window.fontText,
         border_radius=24
     )
