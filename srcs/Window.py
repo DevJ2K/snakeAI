@@ -30,6 +30,9 @@ class Window:
         self.ROOT_PATH = ROOT_PATH
         self.SCREEN_WIDTH = size[0]
         self.SCREEN_HEIGHT = size[1]
+        self.tk = Tk()
+        self.tk.withdraw()
+
         pygame.init()
         pygame.font.init()
         self.clock = pygame.time.Clock()
@@ -319,11 +322,13 @@ class Window:
         # app.shutdown()
         # print(filename)
         # return
-        tmp_win = Tk()
-        tmp_win.withdraw()
+        # tmp_win = Tk()
+        # tmp_win.withdraw()
+        # tmp_win.tk.call('tk', 'scaling', 2.0)
         filename = askopenfilename()
+        # filename = "empty"
         self.buttons.clear()
-        tmp_win.destroy()
+        # tmp_win.destroy()
         if filename == '':
             return
         else:
