@@ -310,6 +310,15 @@ class Window:
         return str(self.training.model)
 
     def select_model(self):
+        # HANDLE MACOS
+        # from magicgui.backends._qtpy import show_file_dialog
+        # from PySide6 import QtCore, QtWidgets, QtGui
+        # app = QtWidgets.QApplication([])
+        # filename = str(show_file_dialog())
+        # # sys.exit(app.exec())
+        # app.shutdown()
+        # print(filename)
+        # return
         tmp_win = Tk()
         tmp_win.withdraw()
         filename = askopenfilename()
