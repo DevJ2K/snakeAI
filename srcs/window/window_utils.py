@@ -42,6 +42,42 @@ def update_button(window, pos: tuple[int, int], onclick: bool = False):
             hover,
             False,
         )
+    for button in window.triangle_buttons:
+        hover = False
+        if button['hitbox'].collidepoint(pos) and button['func']:
+            cursor_color = window.canvas.get_at(pygame.mouse.get_pos())
+            color_list = [
+                pygame.Color(window.theme['bg1']),
+                pygame.Color(window.theme['bg2'])
+            ]
+            if cursor_color not in color_list:
+                hover = True
+                final_hover = True
+                if onclick:
+                    if button['func_params']:
+                        button['func'](button['func_params'])
+                    else:
+                        button['func']()
+
+        add_triangle_button(
+            window,
+            button['x'],
+            button['y'],
+            button['base'],
+            button['height'],
+            button['direction'],
+            button['bg_default'],
+            button['bg_hover'],
+            button['stroke'],
+            button['func'],
+            button['func_params'],
+            hover,
+            False
+        )
+
+
+        # add_triangle_button()
+
     if final_hover:
         # pygame.mouse.set_cursor(pygame.cursors.tri_left)
         hover_cursor = pygame.cursors.compile(my_cursors.hover_strings)
@@ -187,3 +223,61 @@ def add_text(
         shadow_y = y_coord + shadow['y']
         window.canvas.blit(text_shadow, [shadow_x, shadow_y])
     window.canvas.blit(text_render, [x_coord, y_coord])
+
+
+def add_triangle_button(
+        window,
+        x: int,
+        y: int,
+        base: int,
+        height: int,
+        direction: str,
+        bg_default: str = "#000000",
+        bg_hover: str = "#4F4F4F",
+        stroke: str = "#FFFFFF",
+        func: callable = print,
+        func_params: tuple = None,
+        hover: bool = False,
+        append: bool = True
+):
+
+    bg_color = bg_hover if hover is True else bg_default
+    p1 = (x, y)
+    p2 = (x, y - base)
+    if direction == "RIGHT":
+        p3 = (x + height, y - base / 2)
+    elif direction == "LEFT":
+        p3 = (x - height, y - base / 2)
+    else:
+        print(f"Invalid direction {direction}")
+        return
+    button_rect = pygame.draw.polygon(
+        window.canvas,
+        pygame.Color(bg_color),
+        [p1, p2, p3]
+    )
+    pygame.draw.polygon(
+        window.canvas,
+        pygame.Color(stroke),
+        [p1, p2, p3],
+        3
+    )
+
+    if append:
+        window.triangle_buttons.append(
+            {
+                "x": x,
+                "y": y,
+                "base": base,
+                "height": height,
+                "direction": direction,
+                "bg_default": bg_default,
+                "bg_hover": bg_hover,
+                "stroke": stroke,
+                "hitbox": button_rect,
+                "func": func,
+                "func_params": func_params
+            }
+        )
+
+    # window.canvas.blit(text_render, [x_coord, y_coord])

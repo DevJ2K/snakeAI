@@ -1,5 +1,5 @@
 from Window import Window
-from window.window_utils import add_button, add_text
+from window.window_utils import add_button, add_text, add_triangle_button
 import pygame
 
 
@@ -140,38 +140,136 @@ def MENU_computor_visualization(window: Window):
 # MENU COMPUTOR TRAINING ##########
 ###################################
 def MENU_computor_training(window: Window):
-    pygame.draw.polygon(
-        window.canvas,
-        window.theme['btn'],
-        [(100, 100), (130, 130), (70, 100)]
-    )
-    pygame.draw.polygon(
-        window.canvas,
-        "#FFFFFF",
-        [(100, 100), (130, 130), (70, 100)],
-        3
-    )
+    # pygame.draw.polygon(
+    #     window.canvas,
+    #     window.theme['btn'],
+    #     [(100, 100), (130, 130), (70, 100)]
+    # )
+    # pygame.draw.polygon(
+    #     window.canvas,
+    #     "#FFFFFF",
+    #     [(100, 100), (130, 130), (70, 100)],
+    #     3
+    # )
+    font_text = window.get_font(size=36)
 
-    add_text(window, "Sessions", y=window.SCREEN_HEIGHT / 2)
+    add_text(
+        window,
+        "BOARD SIZE",
+        y=window.SCREEN_HEIGHT / 2 - 200,
+        shadow={
+                "color": window.theme['accent'],
+                "opacity": 42,
+                "x": 4,
+                "y": 4,
+        },
+        font=font_text
+    )
     add_button(
         window=window,
-        y=window.SCREEN_HEIGHT / 2 + 60,
+        y=window.SCREEN_HEIGHT / 2 - 140,
+        text="10",
+        bg_default=window.theme['btn'],
+        bg_hover=window.theme['btn-hover'],
+        func=None,
+        func_params="Session number",
+        font=window.fontText,
+        border_radius=24
+    )
+
+    add_triangle_button(
+        window=window,
+        x=window.SCREEN_WIDTH / 2 - 60,
+        y=window.SCREEN_HEIGHT / 2 - 106,
+        base=40,
+        height=40,
+        direction="LEFT",
+        bg_default=window.theme['btn'],
+        bg_hover=window.theme['btn-hover'],
+        func=print,
+        func_params="Left triangle button",
+    )
+    add_triangle_button(
+        window=window,
+        x=window.SCREEN_WIDTH / 2 + 60,
+        y=window.SCREEN_HEIGHT / 2 - 106,
+        base=40,
+        height=40,
+        direction="RIGHT",
+        bg_default=window.theme['btn'],
+        bg_hover=window.theme['btn-hover'],
+        func=print,
+        func_params="Right triangle button",
+    )
+
+    add_text(
+        window,
+        "SESSIONS",
+        y=window.SCREEN_HEIGHT / 2 - 80,
+        shadow={
+                "color": window.theme['accent'],
+                "opacity": 42,
+                "x": 4,
+                "y": 4,
+        },
+        font=font_text
+    )
+    add_button(
+        window=window,
+        y=window.SCREEN_HEIGHT / 2 - 20,
         text="146",
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
         func=None,
         func_params="Session number",
         font=window.fontText,
-        border_radius=16
+        border_radius=24
     )
+
+    add_text(
+        window,
+        "LOAD MODEL",
+        y=window.SCREEN_HEIGHT / 2 + 40,
+        shadow={
+                "color": window.theme['accent'],
+                "opacity": 42,
+                "x": 4,
+                "y": 4,
+        },
+        font=font_text
+    )
+    add_button(
+        window=window,
+        y=window.SCREEN_HEIGHT / 2 + 100,
+        text="None",
+        bg_default=window.theme['btn'],
+        bg_hover=window.theme['btn-hover'],
+        func=None,
+        func_params="Session number",
+        font=window.fontText,
+        border_radius=24
+    )
+
 
     add_button(
         window=window,
-        text="BACK",
+        text="START",
+        x=window.SCREEN_WIDTH / 2 + 40,
         y=window.SCREEN_HEIGHT - 100,
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
         func=window.switch_menu,
         func_params="COMPUTOR_MENU"
     )
-    pass
+
+    add_button(
+        window=window,
+        text="BACK",
+        x=window.SCREEN_WIDTH / 2 - 160,
+        y=window.SCREEN_HEIGHT - 100,
+        bg_default="#d21b13",
+        bg_hover="#9d0b04",
+        func=window.switch_menu,
+        func_params="COMPUTOR_MENU"
+    )
+

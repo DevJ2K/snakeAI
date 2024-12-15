@@ -23,6 +23,8 @@ class Window:
     ):
         abs_file_path = os.path.abspath(__file__)
         ROOT_PATH = os.path.dirname(os.path.dirname(abs_file_path))
+        self.font = font
+        self.ROOT_PATH = ROOT_PATH
         self.SCREEN_WIDTH = size[0]
         self.SCREEN_HEIGHT = size[1]
         pygame.init()
@@ -31,9 +33,9 @@ class Window:
         self.canvas = pygame.display.set_mode(size=size)
         pygame.display.set_caption(title=title)
         # print(font)
-        self.fontTitle = pygame.font.Font(os.path.join(ROOT_PATH, font), 64)
-        self.fontButton = pygame.font.Font(os.path.join(ROOT_PATH, font), 48)
-        self.fontText = pygame.font.Font(os.path.join(ROOT_PATH, font), 24)
+        self.fontTitle = pygame.font.Font(os.path.join(self.ROOT_PATH, font), 64)
+        self.fontButton = pygame.font.Font(os.path.join(self.ROOT_PATH, font), 48)
+        self.fontText = pygame.font.Font(os.path.join(self.ROOT_PATH, font), 24)
         self.run = False
         self.FPS = FPS
         self.tick = 0
@@ -50,6 +52,10 @@ class Window:
 
         # Window Interface Handling
         self.buttons = []
+        self.triangle_buttons = []
+
+    def get_font(self, size: int) -> pygame.font.Font:
+        return pygame.font.Font(os.path.join(self.ROOT_PATH, self.font), size)
 
     def switch_menu(self, menu: str):
         self.menu = menu
@@ -125,6 +131,7 @@ class Window:
         while self.run:
             self.create_background(pattern_size=64)
             self.buttons.clear()
+            self.triangle_buttons.clear()
             self.last_tick = self.tick
             self.tick += 1
             self.current_menu()
