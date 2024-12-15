@@ -261,8 +261,8 @@ def MENU_computor_training(window: Window):
         y=window.SCREEN_HEIGHT - 100,
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
-        func=window.switch_menu,
-        func_params="COMPUTOR_MENU"
+        func=window.run_training,
+        func_params=None
     )
 
     add_button(
@@ -276,3 +276,16 @@ def MENU_computor_training(window: Window):
         func_params="COMPUTOR_MENU"
     )
 
+
+###################################
+# COMPUTOR VISUALIZATION ##########
+###################################
+def RUN_training_visualization(window: Window):
+    add_button(
+            window=window,
+            text="END SESSION",
+            y=window.SCREEN_HEIGHT - 100,
+            bg_default=window.theme['btn'],
+            bg_hover=window.theme['btn-hover'],
+            func=window.leave_game
+        )

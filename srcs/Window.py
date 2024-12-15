@@ -56,7 +56,7 @@ class Window:
         self.last_tick = 0
         self.theme = theme.get()
 
-        self.menu = "COMPUTOR_TRAINING_SETTINGS"
+        self.menu = "TRAINING_VISUALIZATION"
 
         self.snake = Snake(size=10, snake_length=3)
         self.training = Training(board_size=10, sessions_number=1, model=None, learn=False)
@@ -89,6 +89,8 @@ class Window:
             win_screen.MENU_computor_visualization(self)
         elif self.menu == "COMPUTOR_TRAINING_SETTINGS":
             win_screen.MENU_computor_training(self)
+        elif self.menu == "TRAINING_VISUALIZATION":
+            win_screen.RUN_training_visualization(self)
         else:
             print(f"No menu select. '{self.menu}'")
             pass
@@ -99,6 +101,9 @@ class Window:
         self.switch_menu("GAME_INTERFACE")
         self.snake = Snake()
         self.snake.max_snake_length = self.max_len
+
+    def run_training(self):
+        self.switch_menu("TRAINING_VISUALIZATION")
 
     def handle_gameloop(self):
         tick = (self.tick * self.speed) % self.FPS
