@@ -1,5 +1,6 @@
 import os
 import pygame
+import platform
 import pygame.gfxdraw
 from WindowTheme import WindowTheme
 from tkinter import Tk
@@ -30,10 +31,17 @@ class Window:
         self.ROOT_PATH = ROOT_PATH
         self.SCREEN_WIDTH = size[0]
         self.SCREEN_HEIGHT = size[1]
-        self.tk = Tk()
-        self.tk.withdraw()
 
-        pygame.init()
+        # print(platform.system())
+        if platform.system() == "Darwin":
+            self.tk = Tk()
+            self.tk.withdraw()
+            pygame.init()
+        else:
+            pygame.init()
+            self.tk = Tk()
+            self.tk.withdraw()
+
         pygame.font.init()
         self.clock = pygame.time.Clock()
         self.canvas = pygame.display.set_mode(size=size)
