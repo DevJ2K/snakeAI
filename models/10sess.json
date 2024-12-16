@@ -1,0 +1,9 @@
+{
+	"session": 9,
+	"max_sessions": 10,
+	"max_length": 0,
+	"max_duration": 0.0,
+	"q_table": {
+		"state_x": [0, 0, 0, 0]
+	}
+}
