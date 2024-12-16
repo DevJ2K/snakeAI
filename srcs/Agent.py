@@ -3,12 +3,23 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from srcs.Snake import Snake
 import utils.Colors as Colors
+import utils.agent_utils as agent_utils
 import json
 
 class Agent(Snake):
-    def __init__(self, size: int = 10, snake_length: int = 3, model_file: str = None) -> None:
-        super().__init__(size, snake_length)
+    def __init__(
+            self,
+            board_size: int = 10,
+            sessions_number: int = 3,
+            model_file: str = None,
+            learn: bool = False,
+            output_file: str = None
+            ) -> None:
+        super().__init__(board_size)
         self.model = self.get_model(model_file)
+        self.output_file = output_file
+        self.sessions_number = sessions_number
+        self.update_model = learn
 
     def __str__(self) -> str:
         return str(self.model)
@@ -84,13 +95,58 @@ class Agent(Snake):
                 "q_table": {}
             }
 
+    def save_model(self, output_file: str = None):
+        if output_file:
+            pass
+        else:
+            pass
 
+    #####################################
+    # REINFORCEMENT LEARNING
+    def __prune_line(self, line: str) -> str:
+        prune = False
+        c_wall = self.WALL['char']
+        c_empty = self.EMPTY_SPACE['char']
+        tmp_list = [c_wall, c_empty]
+        for char in line:
+            if char not in tmp_list:
+                prune = True
+                break
+        if prune is False:
+            return line
+        if line.startswith(c_wall):
+            return line.lstrip(c_wall).lstrip(c_empty)
+        return line.rstrip(c_wall).rstrip(c_empty)
+
+    def state(self) -> str:
+        head_i = self.snake[0].i
+        head_j = self.snake[0].j
+        up_line = agent_utils.get_up_line(self.board, head_i, head_j)
+        down_line = agent_utils.get_down_line(self.board, head_i, head_j)
+        left_line = agent_utils.get_left_line(self.board, head_i, head_j)
+        right_line = agent_utils.get_right_line(self.board, head_i, head_j)
+
+        prune_up = self.__prune_line(up_line)
+        prune_down = self.__prune_line(down_line)
+        prune_left = self.__prune_line(left_line)
+        prune_right = self.__prune_line(right_line)
+        # print("UP", up_line)
+        # print("UP", prune_up)
+        # print("DOWN", down_line)
+        # print("DOWN", prune_down)
+        # print("LEFT", left_line)
+        # print("LEFT", prune_left)
+        # print("RIGHT", right_line)
+        # print("RIGHT", prune_right)
+
+        return prune_up + prune_down + prune_left + prune_right
 
 if __name__ == "__main__":
     # from pprint import pprint
 
-    agent = Agent(size=10, snake_length=3, model_file="models/10sess.json")
+    agent = Agent(model_file="models/10sess.json")
     agent.display_board_and_vision()
+    print(agent.state())
     print(agent)
     # snake._Snake__place_random_apple({})
     # agent.display_board(False)
