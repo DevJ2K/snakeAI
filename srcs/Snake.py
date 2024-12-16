@@ -90,7 +90,7 @@ class Snake:
         self.snake: list[SnakeNode] = []
         self.__init_snake()
 
-        self.__place_snake()
+        self._place_snake()
         self.__place_apples()
 
         # self.direction = None
@@ -126,16 +126,16 @@ class Snake:
         self.snake.append(SnakeNode((i, j), direction, True))
 
         for _ in range(1, self.snake_length):
-            self.snake.append(self.__new_snake_node())
+            self.snake.append(self._new_snake_node())
 
-    def __place_snake(self):
+    def _place_snake(self):
         for node in self.snake:
             if node.head:
                 self.board[node.i][node.j] = self.HEAD['char']
             else:
                 self.board[node.i][node.j] = self.SNAKE_BODY['char']
 
-    def __place_random_apple(self, apple: dict):
+    def _place_random_apple(self, apple: dict):
         possibility_slot = []
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
@@ -179,7 +179,7 @@ class Snake:
         # for possibility in possibility_slot:
         #     self.board[possibility[0]][possibility[1]] = "T"
 
-    def __new_snake_node(self) -> None:
+    def _new_snake_node(self) -> None:
         if len(self.snake) == 0:
             return
         last_node = self.snake[-1]
@@ -223,7 +223,7 @@ class Snake:
 
         if self.board[next_i][next_j] == self.GREEN_APPLE['char']:
             apple = self.GREEN_APPLE
-            self.snake.append(self.__new_snake_node())
+            self.snake.append(self._new_snake_node())
             # print("GREENAPPLE", next_i, next_j)
             self.green_apple_eat += 1
             self.snake_length += 1
@@ -241,9 +241,9 @@ class Snake:
             self.snake_length -= 1
 
         self.update_snake_nodes(direction, apple == self.GREEN_APPLE)
-        self.__place_snake()
+        self._place_snake()
         if apple is not None:
-            self.__place_random_apple(apple)
+            self._place_random_apple(apple)
         # self.display_board()
         return True
 
@@ -305,7 +305,7 @@ if __name__ == "__main__":
     # from pprint import pprint
 
     snake = Snake(size=10, snake_length=3)
-    # snake._Snake__place_random_apple({})
+    # snake._Snake_place_random_apple({})
     snake.display_board(False)
     # time.sleep(2)
     direction_list = {
