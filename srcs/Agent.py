@@ -92,6 +92,7 @@ class Agent(Snake):
                 "max_sessions": 100,
                 "max_length": 0,
                 "max_duration": 0.0,
+                "max_movements": 0,
                 "q_table": {}
             }
 
