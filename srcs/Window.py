@@ -56,7 +56,7 @@ class Window:
         self.last_tick = 0
         self.theme = theme.get()
 
-        self.menu = "TRAINING_VISUALIZATION"
+        self.menu = "COMPUTOR_TRAINING_SETTINGS"
 
         self.snake = Snake(size=10, snake_length=3)
         self.training = Training(board_size=10, sessions_number=1, model=None, learn=False)
@@ -378,7 +378,15 @@ class Window:
         # tmp_win = Tk()
         # tmp_win.withdraw()
         # tmp_win.tk.call('tk', 'scaling', 2.0)
-        filename = askopenfilename()
+        # filename = askopenfilename(title="Select a model")
+        filename = askopenfilename(title="Select a model")
+        # print(filename)
+        if type(filename) == list or type(filename) == tuple:
+            if len(filename) > 0:
+                filename = filename[0]
+            else:
+                filename = ''
+        # print(platform.system())
         # filename = "empty"
         self.buttons.clear()
         # tmp_win.destroy()
