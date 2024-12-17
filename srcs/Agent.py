@@ -436,7 +436,7 @@ if __name__ == "__main__":
     from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.json")
-    MAIN = 0
+    MAIN = 1
 
     if MAIN == 0: # TRAINING
         agent = Agent(model_name=None, sessions_number=1000, learn=True)
@@ -446,7 +446,7 @@ if __name__ == "__main__":
         agent.display_stats()
 
     elif MAIN == 1: # USE MODEL
-        agent = Agent(model_name="1000sess.json", sessions_number=1, learn=False)
+        agent = Agent(board_size=20, model_name="10000sess(1).json", sessions_number=1, learn=False)
         # agent = Agent(sessions_number=1, learn=False)
         # print(agent.board_state())
         agent.display_board_and_vision()
