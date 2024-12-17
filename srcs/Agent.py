@@ -184,6 +184,7 @@ class Agent(Snake):
         left_line = left_line[::-1]
         right_line = agent_utils.get_right_line(self.board, head_i, head_j)
 
+        # GA_UP|GA_DOWN|GA_LEFT|GA_RIGHT|OBS_NEAR_UP|...|
         state = ""
         state += "y" if up_line.find(self.GREEN_APPLE['char']) != -1 else "n"
         state += "y" if down_line.find(self.GREEN_APPLE['char']) != -1 else "n"
@@ -195,41 +196,13 @@ class Agent(Snake):
         state += self.__get_near_value(left_line)
         state += self.__get_near_value(right_line)
 
-        # print(state)
         return state
-        # STATE
-        # GA_UP|GA_DOWN|GA_LEFT|GA_RIGHT|OBS_NEAR_UP|...|
-
-        prune_up = self.__prune_line(up_line)
-        prune_down = self.__prune_line(down_line)
-        prune_left = self.__prune_line(left_line)
-        prune_right = self.__prune_line(right_line)
-        print("UP", up_line)
-        # print("UP", prune_up)
-        print("DOWN", down_line)
-        # print("DOWN", prune_down)
-        print("LEFT", left_line)
-        # print("LEFT", prune_left)
-        print("RIGHT", right_line)
-        # print("RIGHT", prune_right)
-
-        return prune_up + prune_down + prune_left + prune_right
-        # return up_line + down_line + left_line + right_line
 
     def agent_next_frame(self, direction: tuple[int, int]) -> bool:
         next_i = self.snake[0].i + direction[0]
         next_j = self.snake[0].j + direction[1]
         apple = None
 
-        # self.all_items = [
-        #     self.WALL,
-        #     self.HEAD,
-        #     self.SNAKE_BODY,
-        #     self.GREEN_APPLE,
-        #     self.RED_APPLE,
-        #     self.EMPTY_SPACE
-        # ]
-        # return_value = True
         if self.board[next_i][next_j] not in [
             self.GREEN_APPLE['char'],
             self.RED_APPLE['char'],
@@ -241,7 +214,6 @@ class Agent(Snake):
         if self.board[next_i][next_j] == self.GREEN_APPLE['char']:
             apple = self.GREEN_APPLE
             self.snake.append(self._new_snake_node())
-            # print("GREENAPPLE", next_i, next_j)
             self.green_apple_eat += 1
             self.snake_length += 1
             if self.snake_length > self.max_snake_length:
@@ -251,7 +223,6 @@ class Agent(Snake):
                 self.snake_length -= 1
                 return False
             apple = self.RED_APPLE
-            # print("REDAPPLE", next_i, next_j)
             pop_node = self.snake.pop()
             self.board[pop_node.i][pop_node.j] = self.EMPTY_SPACE['char']
             self.red_apple_eat += 1
@@ -273,36 +244,29 @@ class Agent(Snake):
 
         action_index = self.directions.index(action)
         current_state = self.board_state()
-        print(current_state)
 
-        if current_state[action_index] == "y" or current_state[4 + action_index] == "G":
+        if current_state[action_index] == "y" and current_state[4 + action_index] == "G":
             reward = 2
         else:
-            reward = -0.5
+            reward = -1
         is_game_over = False
         if self.board[new_pos_i][new_pos_j] == self.GREEN_APPLE['char']:
             reward = 10
         elif self.board[new_pos_i][new_pos_j] == self.RED_APPLE['char']:
             reward = -10
         if self.agent_next_frame(action) == False:
-            reward = -50
+            reward = -30
             is_game_over = True
         state = self.board_state()
-        for i in range(4):
-            if state[i] == "y" and state[4 + i] == "G":
-                reward += 2
+        # for i in range(4):
+        #     if state[i] == "y" and state[4 + i] == "G":
+        #         reward += 2
 
         return state, reward, is_game_over
 
 
-# alph a = 0. 1
-# 5 gamma = 0.99
-# 6 e p s i l o n = 1. 0
-# 7 e p sil o n_ dec ay = 0.995
-# 8 ep silon_min = 0.01
-# 9 e p i s o d e s = 1000
-# 10 max_steps = 1000
     def __get_max_value(self, state, action: tuple[int]):
+        return max(self.model["q_table"][state])
         opposite_direction = (-action[0], -action[1])
         forbidden_action = self.directions.index(opposite_direction)
         old_forbidden = self.model["q_table"][state][forbidden_action]
@@ -320,42 +284,47 @@ class Agent(Snake):
             epsilon_decay: float = 0.995,
             epsilon_min: float = 0.01
             ):
-        # for _ in range(self.sessions_number):
-        # actions = [self.UP, self.DOWN, self.LEFT, self.RIGHT]
         less_inf = float("-inf")
-        for i in range(self.sessions_number):
+        for session in range(self.sessions_number):
             self.model["session"] += 1
 
+            # INIT GAME
             self.new_game()
             movement = 0
             total_reward = 0
-            state = self.board_state()
-            while True and movement < 1000:
+
+            while True and (self.learn is False or movement < 1000):
+                state = self.board_state()
+                if self.model["q_table"].get(state) is None:
+                    self.model["q_table"][state] = [0, 0, 0, 0]
+
                 if self.learn == False:
                     self.display_board_and_vision()
                     time.sleep(0.3)
+
                 head = self.snake[0]
                 direction = head.direction
                 opposite_direction = (-direction[0], -direction[1])
-                if self.model["q_table"].get(state) is None:
-                    self.model["q_table"][state] = [0, 0, 0, 0]
+                exclude_direction = []
+                for i in range(4):
+                    if state[4 + i] == self.WALL['char'] or state[4 + i] == self.SNAKE_BODY['char']:
+                        exclude_direction.append(self.directions[i])
+                if opposite_direction not in exclude_direction:
+                    exclude_direction.append(opposite_direction)
+
                 if random.uniform(0, 1) < epsilon:
-                    # EXPLORATION
-                    # Choose a random action
-                    # print("HERE1")
-                    tmp_state = self.board_state()
+                    # EXPLORATION | Choose a random action
                     action = None
-                    for i in range(4):
-                        if tmp_state[i] == "y" and tmp_state[4 + i] == "G":
-                            action = self.directions[i]
+                    # for i in range(4):
+                    #     if state[i] == "y" and state[4 + i] == "G":
+                    #         action = self.directions[i]
+                    #         break
                     if action == None:
                         action = random.choice([elt for elt in self.directions if elt != opposite_direction])
                     # action = random.choice(self.directions)
                 else:
-                    # print("HERE2")
-                    # EXPLOITATION
-                    # Take the best action of the action in q_table
-                    # print(self.model["q_table"][state])
+                    # EXPLOITATION | Take the best action of the action in q_table
+
                     forbidden_index = self.directions.index(opposite_direction)
                     old_forbidden = self.model["q_table"][state][forbidden_index]
                     # print(old_forbidden, forbidden_index)
@@ -365,10 +334,8 @@ class Agent(Snake):
                     action = self.directions[action_index]
                     self.model["q_table"][state][forbidden_index] = old_forbidden
 
-                    # if max_value == 0.0:
-                    tmp_state = self.board_state()
                     for i in range(4):
-                        if tmp_state[i] == "y" or tmp_state[4 + i] == "G":
+                        if state[i] == "y" or state[4 + i] == "G":
                             action = self.directions[i]
                     # print(self.model["q_table"][state][forbidden_index])
 
@@ -378,32 +345,31 @@ class Agent(Snake):
 
 
                 next_state, reward, is_game_over = self.make_action(action)
-                # next_state, reward, is_game_over = "W00W0W", 0, random.randint(0, 10) == 5
+
 
                 index_action = self.directions.index(action)
-                old_value = self.model["q_table"][state][index_action]
-                if self.model["q_table"].get(next_state) is None:
-                    self.model["q_table"][next_state] = [0, 0, 0, 0]
-                next_state_value = self.__get_max_value(next_state, action)
-
 
                 # Update q_table with Q_function
                 if self.learn:
-                    new_value = (1 - learning_rate) * old_value + learning_rate * (reward + gamma * next_state_value)
+                    old_value = self.model["q_table"][state][index_action]
+                    if self.model["q_table"].get(next_state) is None:
+                        self.model["q_table"][next_state] = [0, 0, 0, 0]
+                    next_max_value = self.__get_max_value(next_state, action)
+                    next_max_value = max(self.model["q_table"][next_state])
+
+                    new_value = (1 - learning_rate) * old_value + learning_rate * (reward + gamma * next_max_value)
                     self.model["q_table"][state][index_action] = new_value
 
                 total_reward += reward
                 movement += 1
                 if is_game_over:
                     break
-                # if opposite_direction == action:
-                #     raise Exception(f"WTF FRR {direction}, {opposite_direction}, {action}, {self.model['q_table'][state]}")
 
             self.model['max_movements'] = max(self.model['max_movements'], movement)
             if epsilon > epsilon_min:
                 epsilon *= epsilon_decay
 
-            print(f"Session n°{i}, Total Reward: {total_reward}, Duration: {movement}, Max len: {self.snake_length}")
+            print(f"Session n°{session}, Total Reward: {total_reward}, Duration: {movement}, Max len: {self.snake_length}")
 
         self.model["max_length"] = self.max_snake_length
         print(f"Max length: {self.max_snake_length}, Max movement: {self.model['max_movements']}")
@@ -417,13 +383,13 @@ if __name__ == "__main__":
     from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.json")
-    MAIN = 1
+    MAIN = 0
 
     if MAIN == 0: # TRAINING
         agent = Agent(model_name=None, sessions_number=1000, learn=True)
         # agent.display_board_and_vision()
         agent.run_agent(epsilon=0.7, epsilon_decay=0.995, epsilon_min=0.01)
-        agent.save_model("1000sess.json")
+        agent.save_model("tmp.json")
         agent.display_stats()
 
     elif MAIN == 1: # USE MODEL
