@@ -1,6 +1,6 @@
 ########################################
 ########## VARIABLES
-DIRECTORY = srcs utils tests
+DIRECTORY = srcs tests
 
 ########################################
 ########## COLORS
