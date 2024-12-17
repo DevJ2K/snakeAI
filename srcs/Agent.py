@@ -241,15 +241,15 @@ class Agent(Snake):
             ):
         # for _ in range(self.sessions_number):
         # actions = [self.UP, self.DOWN, self.LEFT, self.RIGHT]
-        state = self.board_state()
+        max_movement = 0
         for i in range(self.sessions_number):
+            self.new_game()
             movement = 0
             total_reward = 0
-            duration = 0
-            snake_len = 0
             while True:
-                self.display_board_and_vision()
-                time.sleep(0.5)
+                state = self.board_state()
+                # self.display_board_and_vision()
+                # time.sleep(0.5)
                 head = self.snake[0]
                 direction = head.direction
                 opposite_direction = (-direction[0], -direction[1])
@@ -270,8 +270,8 @@ class Agent(Snake):
                     action = self.directions[max_action_index]
                     self.model["q_table"][state][forbidden_action] = old_forbidden
 
-                next_state, reward, is_game_over = self.simulate_action(action)
-                # print(next_state, reward, is_game_over)
+                # next_state, reward, is_game_over = self.simulate_action(action)
+                next_state, reward, is_game_over = "W00W0W", 0, random.randint(0, 10) == 5
 
                 index_action = self.directions.index(action)
                 old_value = self.model["q_table"][state][index_action]
@@ -281,9 +281,8 @@ class Agent(Snake):
 
                 # Update q_table with Q_function
                 new_value = (1 - learning_rate) + old_value + learning_rate * (reward + gamma * next_state_value)
-                # print
+
                 self.model["q_table"][state][index_action] = new_value
-                print(old_value, new_value)
 
                 total_reward += reward
                 self.next_frame(action)
@@ -292,26 +291,30 @@ class Agent(Snake):
                     break
                 if opposite_direction == action:
                     raise Exception(f"WTF FRR {opposite_direction} | {action}")
-                # print(head.direction, opposite_direction, action)
 
-
+            max_movement = max(max_movement, movement)
             if epsilon > epsilon_min:
                 epsilon *= epsilon_decay
 
             # print(f"Session n°{i}, Total Reward: {total_reward}, Duration: {duration}, Max len: {snake_len}")
 
+        print(f"Max length: {self.max_snake_length}, Max movement: {max_movement}")
+
 
 if __name__ == "__main__":
-    # from pprint import pprint
+    from pprint import pprint
+    from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.json")
-    agent = Agent(model_file=None, sessions_number=10)
+    agent = Agent(model_file=None, sessions_number=100)
     agent.display_board_and_vision()
-    print(agent.board_state())
+    # print(agent.board_state())
     print(agent)
     # for i in range(10000):
+    mt = MeasureTime(start=True)
     agent.run_agent(epsilon=1, epsilon_decay=0.995, epsilon_min=0.01)
-    print(agent)
+    mt.stop()
+    # print(agent)
     # snake._Snake__place_random_apple({})
     # agent.display_board(False)
     # agent.display_vision(False)
