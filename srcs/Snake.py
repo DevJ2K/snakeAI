@@ -77,22 +77,10 @@ class Snake:
         ]
 
         self.size = size
-        self.snake_length = snake_length
+        self.default_length = snake_length
         self.max_snake_length = snake_length
-        self.green_apple_eat = 0
-        self.red_apple_eat = 0
 
-        self.is_running = False
-        self.game_over = False
-        self.timer = None
-
-        self.board: list[list[str]] = self.__create_board()
-        self.snake: list[SnakeNode] = []
-        self.__init_snake()
-
-        self._place_snake()
-        self.__place_apples()
-
+        self.new_game()
         # self.direction = None
 
     def __create_board(self) -> list[list[str]]:
@@ -104,6 +92,21 @@ class Snake:
         board.insert(0, [self.WALL['char'] for _ in range(self.size + 2)])
         board.append([self.WALL['char'] for _ in range(self.size + 2)])
         return board
+
+    def new_game(self):
+        self.snake_length = self.default_length
+        self.green_apple_eat = 0
+        self.red_apple_eat = 0
+        self.is_running = False
+        self.game_over = False
+        self.timer = None
+
+        self.board: list[list[str]] = self.__create_board()
+        self.snake: list[SnakeNode] = []
+        self.__init_snake()
+
+        self._place_snake()
+        self.__place_apples()
 
     def get_board_with_border(self) -> list[list[str]]:
         return self.board
@@ -307,6 +310,7 @@ if __name__ == "__main__":
     snake = Snake(size=10, snake_length=3)
     # snake._Snake_place_random_apple({})
     snake.display_board(False)
+    snake.new_game()
     # time.sleep(2)
     direction_list = {
         "U": snake.UP,
