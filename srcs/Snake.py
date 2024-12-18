@@ -67,6 +67,13 @@ class Snake:
             self.RIGHT,
         ]
 
+        self.direction_name = [
+            "UP",
+            "DOWN",
+            "LEFT",
+            "RIGHT"
+        ]
+
         self.all_items = [
             self.WALL,
             self.HEAD,

@@ -324,6 +324,38 @@ class Agent(Snake):
         # action = self.directions[action_index]
         # self.model["q_table"][state][forbidden_index] = old_forbidden
         # pass
+
+    def __display_session_vision(
+            self,
+            state,
+            previous_action,
+            type_action,
+            previous_reward,
+            waiting_time: float = 0.8
+    ):
+        if previous_action == "":
+            return
+        os.system('clear')
+        if type_action == "EXPLORATION":
+            print(f"{Colors.BHCYAN}{type_action}{Colors.RESET}", end="")
+        else:
+            print(f"{Colors.BHMAG}{type_action}{Colors.RESET}", end="")
+
+        print(Colors.BHWHITE, end=" | State: ")
+        print(f"{Colors.BHYELLOW}{state}", end="")
+
+        print(Colors.BHWHITE, end=" | Reward: ")
+        if previous_reward < 0:
+            print(f"{Colors.BHRED}{previous_reward}", end="")
+        else:
+            print(f"{Colors.BHGREEN}{previous_reward}", end="")
+
+        print(Colors.BHWHITE, end=" | Action: ")
+        print(f"{previous_action}")
+        print(Colors.RESET)
+        self.display_board_and_vision()
+        time.sleep(waiting_time)
+
     def run_agent(
             self,
             learning_rate: float = 0.1,
@@ -338,7 +370,12 @@ class Agent(Snake):
             # INIT GAME
             self.new_game()
             movement = 0
+
             total_reward = 0
+            previous_action = ""
+            previous_reward = 0
+            previous_state = ""
+            type_action = ""
 
             while True and (self.learn is False or movement < 500):
                 state = self.board_state()
@@ -346,39 +383,36 @@ class Agent(Snake):
                     self.model["q_table"][state] = [0, 0, 0, 0]
 
                 if self.learn is False:
-                    self.display_board_and_vision()
-                    time.sleep(0.3)
+                    self.__display_session_vision(
+                        previous_state,
+                        previous_action,
+                        type_action,
+                        previous_reward,
+                        0.3
+                    )
 
                 head = self.snake[0]
                 direction = head.direction
                 opposite_direction = (-direction[0], -direction[1])
-                exclude_direction = []
-                for i in range(4):
-                    if False:
-                        # if state[4 + i] == self.WALL['char']
-                        # elif state[4 + i] == self.SNAKE_BODY['char']:
-                        exclude_direction.append(self.directions[i])
-                if opposite_direction not in exclude_direction:
-                    exclude_direction.append(opposite_direction)
+                exclude_direction = [opposite_direction]
+
                 actions = self.__get_actions(exclude_direction)
-                # print(state, actions)
                 if random.uniform(0, 1) < epsilon:
                     # EXPLORATION | Choose a random action
                     action = random.choice(actions)
-                    # action = None
-                    # for i in range(4):
-                    #     if state[i] == "y" and state[4 + i] == "G":
-                    #         action = self.directions[i]
-                    #         break
+                    type_action = "EXPLORATION"
                 else:
                     # EXPLOITATION | Best action of the action in q_table
                     action = self.__get_exploitable_action(state, actions)
-                    # if max_value == 0:
-                    #     for i in range(4):
-                    #         if state[i] == "y" or state[4 + i] == "G":
-                    #             action = self.directions[i]
+                    type_action = "EXPLOITATION"
 
+                for i in range(len(self.directions)):
+                    if self.directions[i] == action:
+                        previous_action = self.direction_name[i]
+                        break
                 next_state, reward, is_game_over = self.make_action(action)
+                previous_reward = reward
+                previous_state = state
 
                 index_action = self.directions.index(action)
 
@@ -400,7 +434,6 @@ class Agent(Snake):
                 movement += 1
                 if is_game_over:
                     break
-
             new_max_movement = max(self.model['max_movements'], movement)
             self.model['max_movements'] = new_max_movement
             if epsilon > epsilon_min:
@@ -420,10 +453,10 @@ if __name__ == "__main__":
     # from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.json")
-    MAIN = 0
+    MAIN = 1
 
     if MAIN == 0:  # TRAINING
-        agent = Agent(model_name=None, sessions_number=1000, learn=True)
+        agent = Agent(model_name=None, sessions_number=1500, learn=True)
         # agent.display_board_and_vision()
         agent.run_agent(epsilon=1, epsilon_decay=0.995, epsilon_min=0.01)
         agent.save_model("tmp.json")
@@ -431,14 +464,14 @@ if __name__ == "__main__":
 
     elif MAIN == 1:  # USE MODEL
         agent = Agent(
-            board_size=20,
-            model_name="10000sess(1).json",
+            board_size=10,
+            model_name="tmp.json",
             sessions_number=1,
             learn=False
         )
         # agent = Agent(sessions_number=1, learn=False)
         # print(agent.board_state())
-        agent.display_board_and_vision()
+        # agent.display_board_and_vision()
         agent.run_agent(epsilon=0, epsilon_decay=0.995, epsilon_min=0.01)
     # mt.stop()
     # agent.save_model()
