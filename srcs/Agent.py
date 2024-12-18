@@ -23,6 +23,7 @@ class Agent(Snake):
         self.sessions_number = sessions_number
         self.update_model = learn
         self.model = self.get_model(model_name)
+        self.display_stats()
         self.learn = learn
 
     def __str__(self) -> str:
@@ -88,21 +89,53 @@ class Agent(Snake):
     #####################################
     # MODELS
     def get_model(self, file: str = None) -> dict:
+        model = {
+            "session": 0,
+            "max_length": 0,
+            "max_movements": 0,
+            "q_table": {}
+        }
         if file:
-            file_parent_dir = os.path.dirname(os.path.abspath(__file__))
-            root_dir = os.path.dirname(file_parent_dir)
-            model_dir = os.path.join(root_dir, "models")
-            model_file = os.path.join(model_dir, file)
-            with open(model_file) as fd:
-                return json.load(fd)
-                # print(self.model)
-        else:
-            return {
-                "session": 0,
-                "max_length": 0,
-                "max_movements": 0,
-                "q_table": {}
-            }
+            # file_parent_dir = os.path.dirname(os.path.abspath(__file__))
+            # root_dir = os.path.dirname(file_parent_dir)
+            # model_dir = os.path.join(root_dir, "models")
+            # model_file = os.path.join(model_dir, file)
+            file = os.path.abspath(file)
+            try:
+                with open(file) as fd:
+                    model = json.load(fd)
+                BHGREEN = Colors.BHGREEN
+                RESET = Colors.RESET
+                print(f"{BHGREEN}Model has been recovered: {RESET}", end="")
+                print(f"{Colors.BHWHITE}{file}{RESET}")
+            except Exception as e:
+                print(Colors.BHRED, end="")
+                print(f"Failed to load the model: {file}", end="")
+                print(Colors.RESET)
+                print(f"{Colors.RED}{e}{Colors.RESET}")
+
+        print(Colors.BRED, end="")
+        value = model.get("session")
+        if value is None or not isinstance(value, int):
+            print(f"'session' is not found or not an integer. ({value})")
+            model['session'] = 0
+
+        value = model.get("max_length")
+        if value is None or not isinstance(value, int):
+            print(f"'max_length' is not found or not an integer. ({value})")
+            model['max_length'] = 0
+
+        value = model.get("max_movements")
+        if value is None or not isinstance(value, int):
+            print(f"'max_movements' is not found or not an integer. ({value})")
+            model['max_movements'] = 0
+
+        value = model.get("q_table")
+        if value is None or not isinstance(value, dict):
+            print(f"'q_table' is not found or not a dictionnary. ({value})")
+            model['q_table'] = {}
+        print(Colors.RESET, end="")
+        return model
 
     def save_model(self, filename: str = None):
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -130,7 +163,10 @@ class Agent(Snake):
             print(f"{BHGREEN}Model has been saved in: {RESET}", end="")
             print(f"{Colors.BHWHITE}{file}{RESET}")
         except Exception as e:
-            print(f"Error: {e}")
+            print(Colors.BHRED, end="")
+            print(f"Failed to save the model in: {file}", end="")
+            print(Colors.RESET)
+            print(f"{Colors.RED}{e}{Colors.RESET}")
 
     def display_stats(self):
         RESET = Colors.RESET
@@ -464,7 +500,10 @@ if __name__ == "__main__":
     MAIN = 0
 
     if MAIN == 0:  # TRAINING
-        agent = Agent(model_name=None, sessions_number=100, learn=True)
+        agent = Agent(
+            model_name="models/100sess.json",
+            sessions_number=10,
+            learn=True)
         # agent.display_board_and_vision()
         agent.run_agent(epsilon=1, epsilon_decay=0.995, epsilon_min=0.01)
         agent.save_model("tmp.json")
