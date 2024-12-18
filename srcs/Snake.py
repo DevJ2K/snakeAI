@@ -1,6 +1,6 @@
 from srcs.SnakeNode import SnakeNode
-from utils.snake_utils import is_enough_space_around
-import utils.Colors as Colors
+from srcs.utils.snake_utils import is_enough_space_around
+import srcs.utils.Colors as Colors
 import random
 import time
 

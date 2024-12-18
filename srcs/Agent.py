@@ -3,8 +3,8 @@ import random
 # import sys
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from srcs.Snake import Snake
-import utils.Colors as Colors
-import utils.agent_utils as agent_utils
+import srcs.utils.Colors as Colors
+import srcs.utils.agent_utils as agent_utils
 import json
 import time
 
