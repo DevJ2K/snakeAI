@@ -1,13 +1,13 @@
 import os
 import sys
 import random
-import copy
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from srcs.Snake import Snake
 import utils.Colors as Colors
 import utils.agent_utils as agent_utils
 import json
 import time
+
 
 class Agent(Snake):
     def __init__(
@@ -31,9 +31,9 @@ class Agent(Snake):
     def vision(self) -> list[list[str]]:
         head_i = self.snake[0].i
         head_j = self.snake[0].j
-        vision_board = [["*"
-                for _ in range(len(self.board))]
-                for __ in range(len(self.board[0]))
+        vision_board = [
+            ["*" for _ in range(len(self.board))]
+            for __ in range(len(self.board[0]))
         ]
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
@@ -62,8 +62,8 @@ class Agent(Snake):
         print(display_str)
 
     def display_board_and_vision(self):
-        v_board = self.vision() # Vision board
-        g_board = self.board # Game board
+        v_board = self.vision()  # Vision board
+        g_board = self.board  # Game board
 
         display_str = ""
         for i in range(len(g_board)):
@@ -89,14 +89,15 @@ class Agent(Snake):
     # MODELS
     def get_model(self, file: str = None) -> dict:
         if file:
-            root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            file_parent_dir = os.path.dirname(os.path.abspath(__file__))
+            root_dir = os.path.dirname(file_parent_dir)
             model_dir = os.path.join(root_dir, "models")
             model_file = os.path.join(model_dir, file)
             with open(model_file) as fd:
                 return json.load(fd)
                 # print(self.model)
         else:
-           return {
+            return {
                 "session": 0,
                 "max_length": 0,
                 "max_movements": 0,
@@ -129,13 +130,17 @@ class Agent(Snake):
         print(file)
 
     def display_stats(self):
-        print(f"{Colors.BHGREEN}==== Model Stats ===={Colors.RESET}")
+        RESET = Colors.RESET
+        BHCYAN = Colors.BHCYAN
+        BHGREEN = Colors.BHGREEN
+        BHYELLOW = Colors.BHYELLOW
+        print(f"{BHGREEN}==== Model Stats ===={RESET}")
         print(Colors.BHWHITE, end="")
-        print(f"Session(s): {Colors.BHCYAN}{self.model['session']}", Colors.RESET)
+        print(f"Session(s): {BHCYAN}{self.model['session']}", RESET)
         print(Colors.BHWHITE, end="")
-        print(f"Max length: {Colors.BHGREEN}{self.model['max_length']}", Colors.RESET)
+        print(f"Max length: {BHGREEN}{self.model['max_length']}", RESET)
         print(Colors.BHWHITE, end="")
-        print(f"Max movements: {Colors.BHYELLOW}{self.model['max_movements']}", Colors.RESET)
+        print(f"Max movements: {BHYELLOW}{self.model['max_movements']}", RESET)
 
     #####################################
     # REINFORCEMENT LEARNING
@@ -250,8 +255,8 @@ class Agent(Snake):
         new_pos_i = head_i + action[0]
         new_pos_j = head_j + action[1]
 
-        action_index = self.directions.index(action)
-        current_state = self.board_state()
+        # action_index = self.directions.index(action)
+        # current_state = self.board_state()
 
         # if current_state[action_index] == "y" and current_state[4 + action_index] == "G":
         #     reward = 1
@@ -262,7 +267,7 @@ class Agent(Snake):
             reward = 10
         elif self.board[new_pos_i][new_pos_j] == self.RED_APPLE['char']:
             reward = -10
-        if self.next_frame(action) == False:
+        if self.next_frame(action) is False:
             reward = -30
             is_game_over = True
         state = self.board_state()
@@ -271,7 +276,6 @@ class Agent(Snake):
         #         reward += 2
 
         return state, reward, is_game_over
-
 
     def __get_max_value(self, state, action: tuple[int]):
         return max(self.model["q_table"][state])
@@ -326,12 +330,11 @@ class Agent(Snake):
     def run_agent(
             self,
             learning_rate: float = 0.1,
-            gamma: float = 0.99, # Weight of next state
+            gamma: float = 0.99,  # Weight of next state
             epsilon: float = 1.0,
             epsilon_decay: float = 0.995,
             epsilon_min: float = 0.01
             ):
-        less_inf = float("-inf")
         for session in range(self.sessions_number):
             self.model["session"] += 1
 
@@ -345,7 +348,7 @@ class Agent(Snake):
                 if self.model["q_table"].get(state) is None:
                     self.model["q_table"][state] = [0, 0, 0, 0]
 
-                if self.learn == False:
+                if self.learn is False:
                     self.display_board_and_vision()
                     time.sleep(0.3)
 
@@ -355,7 +358,7 @@ class Agent(Snake):
                 exclude_direction = []
                 for i in range(4):
                     if False:
-                    # if state[4 + i] == self.WALL['char']:# or state[4 + i] == self.SNAKE_BODY['char']:
+                        # if state[4 + i] == self.WALL['char']:# or state[4 + i] == self.SNAKE_BODY['char']:
                         exclude_direction.append(self.directions[i])
                 if opposite_direction not in exclude_direction:
                     exclude_direction.append(opposite_direction)
@@ -398,7 +401,6 @@ class Agent(Snake):
                     # action = self.directions[index_value]
 
                 next_state, reward, is_game_over = self.make_action(action)
-
 
                 index_action = self.directions.index(action)
 
