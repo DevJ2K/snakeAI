@@ -213,6 +213,7 @@ class Agent(Snake):
         axis_len.plot(iteration, stat_len, c='g')
         axis_len.legend(['Snake Max Length'], loc='upper right')
         axis_len.set_title("Snake max length Over Sessions")
+        # axis_len.set_yticks([min(stat_len), max(stat_len) + 1])
         axis_len.set_ylim(bottom=0)
 
         axis_apple.plot(iteration, stat_ga, c='g')
@@ -227,9 +228,6 @@ class Agent(Snake):
         axis_movement.legend(['Snake movement'], loc='upper right')
         axis_movement.set_title("Snake movement Over Sessions")
         axis_movement.set_ylim(bottom=0)
-
-        print(iteration)
-        print(self.model['history'][0])
 
         plt.tight_layout()
         plt.show()
@@ -300,10 +298,10 @@ class Agent(Snake):
         # GA_UP|GA_DOWN|GA_LEFT|GA_RIGHT|OBS_NEAR_UP|...|
         ga_char = self.GREEN_APPLE['char']
         state = ""
-        state += "y" if up_line.find(ga_char) != -1 else "n"
-        state += "y" if down_line.find(ga_char) != -1 else "n"
-        state += "y" if left_line.find(ga_char) != -1 else "n"
-        state += "y" if right_line.find(ga_char) != -1 else "n"
+        # state += "y" if up_line.find(ga_char) != -1 else "n"
+        # state += "y" if down_line.find(ga_char) != -1 else "n"
+        # state += "y" if left_line.find(ga_char) != -1 else "n"
+        # state += "y" if right_line.find(ga_char) != -1 else "n"
 
         state += self.__get_near_value(up_line)
         state += self.__get_near_value(down_line)
@@ -319,14 +317,19 @@ class Agent(Snake):
         new_pos_i = head_i + action[0]
         new_pos_j = head_j + action[1]
 
-        reward = -1
+        index_action = self.directions.index(action)
+        cur_state = self.board_state()
+        if cur_state[index_action] == "y" and cur_state[4 + index_action] == "G":
+            reward = 1
+        else:
+            reward = -1
         is_game_over = False
         if self.board[new_pos_i][new_pos_j] == self.GREEN_APPLE['char']:
-            reward = 15
+            reward = 10
         elif self.board[new_pos_i][new_pos_j] == self.RED_APPLE['char']:
             reward = -10
         if self.next_frame(action) is False:
-            reward = -50
+            reward = -350
             is_game_over = True
         state = self.board_state()
 
@@ -434,6 +437,13 @@ class Agent(Snake):
                 head = self.snake[0]
                 direction = head.direction
                 opposite_direction = (-direction[0], -direction[1])
+                # exclude_direction = []
+                # for i in range(4):
+                #     if state[4 + i] == self.WALL['char'] or state[4 + i] == self.SNAKE_BODY['char']:
+                #         exclude_direction.append(self.directions[i])
+                # if opposite_direction not in exclude_direction:
+                #     exclude_direction.append(opposite_direction)
+                # actions = self.__get_actions(exclude_direction)
                 exclude_direction = [opposite_direction]
                 actions = self.__get_actions(exclude_direction)
 
@@ -514,12 +524,12 @@ if __name__ == "__main__":
     # from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.json")
-    MAIN = 2
+    MAIN = 0
 
     if MAIN == 0:  # TRAINING
         agent = Agent(
             model_name=None,
-            sessions_number=500,
+            sessions_number=1000,
             learn=True)
         # agent.display_board_and_vision()
         agent.run_agent(
@@ -528,6 +538,7 @@ if __name__ == "__main__":
             epsilon_decay=0.995,
             epsilon_min=0.01)
         agent.save_model("tmp.json")
+        agent.visualization_history()
         # agent.display_stats()
 
     elif MAIN == 1:  # USE MODEL
