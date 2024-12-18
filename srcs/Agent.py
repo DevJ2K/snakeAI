@@ -99,10 +99,6 @@ class Agent(Snake):
             "q_table": {}
         }
         if file:
-            # file_parent_dir = os.path.dirname(os.path.abspath(__file__))
-            # root_dir = os.path.dirname(file_parent_dir)
-            # model_dir = os.path.join(root_dir, "models")
-            # model_file = os.path.join(model_dir, file)
             file = os.path.abspath(file)
             try:
                 with open(file) as fd:
@@ -196,40 +192,33 @@ class Agent(Snake):
         fig, axis = plt.subplots(3, 1)
         fig.canvas.manager.set_window_title("Model Visualization")
 
-        #  self.model['history'].append((
-        #         self.snake_length,
-        #         self.green_apple_eat,
-        #         self.red_apple_eat,
-        #         movement,
-        #         0 if type_action == "EXPLORATION" else 1
-        #     ))
         iteration = range(len(history))
-        stat_len = [elt[0] for elt in history]
-        stat_ga = [elt[1] for elt in history]
-        stat_ra = [elt[2] for elt in history]
-        stat_movement = [elt[3] for elt in history]
+        stat_len = [session[0] for session in history]
+        stat_ga = [session[1] for session in history]
+        stat_ra = [session[2] for session in history]
+        stat_movement = [session[3] for session in history]
 
         axis_len = axis[0]
         axis_apple = axis[1]
         axis_movement = axis[2]
 
-        axis_len.plot(iteration, stat_len, c='g')
-        axis_len.legend(['Snake Max Length'], loc='upper right')
-        axis_len.set_title("Snake max length Over Sessions")
+        axis_len.plot(iteration, stat_len, c='#16aaff')
+        axis_len.legend(['Maximum Snake Length'], loc='upper right')
+        axis_len.set_title("Maximum Snake Length Across Sessions")
         # axis_len.set_yticks([min(stat_len), max(stat_len) + 1])
         axis_len.set_ylim(bottom=0)
 
-        axis_apple.plot(iteration, stat_ga, c='g')
-        axis_apple.plot(iteration, stat_ra, c='r')
+        axis_apple.plot(iteration, stat_ga, c='#16ee3d')
+        axis_apple.plot(iteration, stat_ra, c='#ee2016')
         axis_apple.legend(
-            ['Eaten green apples', 'Eaten red apples'],
+            ['Green Apples Eaten', 'Red Apples Eaten'],
             loc='upper right')
-        axis_apple.set_title("Eaten Green vs Red Apples Over Sessions")
+        axis_apple.set_title("Green vs Red Apples Eaten Across Sessions")
         axis_apple.set_ylim(bottom=0)
 
-        axis_movement.plot(iteration, stat_movement, c='b')
-        axis_movement.legend(['Snake movement'], loc='upper right')
-        axis_movement.set_title("Snake movement Over Sessions")
+        axis_movement.plot(iteration, stat_movement, c='#3333FF')
+        axis_movement.legend(['Total Snake Movements'], loc='upper right')
+        axis_movement.set_title("Total Movements of the Snake Across Sessions")
         axis_movement.set_ylim(bottom=0)
 
         plt.tight_layout()
@@ -239,7 +228,8 @@ class Agent(Snake):
     def display_training_session_result(
             self,
             total_rewards,
-            movements
+            movements,
+            session_max_movements
             ):
         RESET = Colors.RESET
         BHCYAN = Colors.BHCYAN
@@ -248,15 +238,20 @@ class Agent(Snake):
         BHMAG = Colors.BHMAG
         print(f"{BHGREEN}==== Session Stats ===={RESET}")
         print(Colors.BHWHITE, end="")
-        print(f"Total Rewards: {BHCYAN}{total_rewards}", RESET)
+        print(f"Session(s): {BHCYAN}{self.sessions_number}", RESET)
+        if self.sessions_number == 1:
+            print(Colors.BHWHITE, end="")
+            print(f"Total rewards: {BHCYAN}{total_rewards}", RESET)
+            print(Colors.BHWHITE, end="")
+            print(f"Green apple: {BHGREEN}{self.green_apple_eat}", RESET)
+            print(Colors.BHWHITE, end="")
+            print(f"Red apple: {BHGREEN}{self.red_apple_eat}", RESET)
+            print(Colors.BHWHITE, end="")
+            print(f"Movements: {BHYELLOW}{movements}", RESET)
         print(Colors.BHWHITE, end="")
-        print(f"Green Apple: {BHGREEN}{self.green_apple_eat}", RESET)
-        print(Colors.BHWHITE, end="")
-        print(f"Red Apple: {BHGREEN}{self.red_apple_eat}", RESET)
+        print(f"Max movements: {BHYELLOW}{movements}", RESET)
         print(Colors.BHWHITE, end="")
         print(f"Max length: {BHMAG}{self.max_snake_length}", RESET)
-        print(Colors.BHWHITE, end="")
-        print(f"Movements: {BHYELLOW}{movements}", RESET)
 
     #####################################
     # REINFORCEMENT LEARNING
@@ -298,7 +293,7 @@ class Agent(Snake):
         left_line = left_line[::-1]
         right_line = agent_utils.get_right_line(self.board, head_i, head_j)
 
-        # GA_UP|GA_DOWN|GA_LEFT|GA_RIGHT|OBS_NEAR_UP|...|
+        # GA_UP|GA_DOWN|GA_LEFT|GA_RIGHT|OBS_NEAR_UP|...|GAME_OVER
         ga_char = self.GREEN_APPLE['char']
         state = ""
 
@@ -312,7 +307,7 @@ class Agent(Snake):
         state += self.__get_near_value(left_line)
         state += self.__get_near_value(right_line)
 
-        if self.session_over == True:
+        if self.session_over is True:
             state += "1"
         else:
             state += "0"
@@ -390,7 +385,6 @@ class Agent(Snake):
         else:
             print(f"{Colors.BHMAG}{type_action}{Colors.RESET}", end="")
 
-
         print(Colors.BHWHITE, end=" | Reward: ")
         if previous_reward < 0:
             print(f"{Colors.BHRED}{previous_reward}", end="")
@@ -420,6 +414,7 @@ class Agent(Snake):
         if self.sessions_number <= 0:
             return
         history = []
+        session_max_movements = 0
         for session in range(self.sessions_number):
             self.model["session"] += 1
 
@@ -450,13 +445,6 @@ class Agent(Snake):
                 head = self.snake[0]
                 direction = head.direction
                 opposite_direction = (-direction[0], -direction[1])
-                # exclude_direction = []
-                # for i in range(4):
-                #     if state[4 + i] == self.WALL['char'] or state[4 + i] == self.SNAKE_BODY['char']:
-                #         exclude_direction.append(self.directions[i])
-                # if opposite_direction not in exclude_direction:
-                #     exclude_direction.append(opposite_direction)
-                # actions = self.__get_actions(exclude_direction)
                 exclude_direction = [opposite_direction]
                 actions = self.__get_actions(exclude_direction)
 
@@ -497,6 +485,7 @@ class Agent(Snake):
                 if is_game_over:
                     break
             new_max_movement = max(self.model['max_movements'], movement)
+            session_max_movements = max(session_max_movements, movement)
             self.model['max_movements'] = new_max_movement
             if epsilon > epsilon_min:
                 epsilon *= epsilon_decay
@@ -533,11 +522,11 @@ class Agent(Snake):
                     previous_reward,
                     speed
                 )
-            if self.sessions_number == 1:
-                self.display_training_session_result(
-                    total_reward,
-                    movement
-                )
+            self.display_training_session_result(
+                total_reward,
+                movement,
+                session_max_movements
+            )
         return history
 
 
@@ -546,7 +535,7 @@ if __name__ == "__main__":
     # from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.jso0")
-    MAIN = 1
+    MAIN = 2
 
     if MAIN == 0:  # TRAINING
         agent = Agent(
