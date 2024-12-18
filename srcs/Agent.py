@@ -26,6 +26,7 @@ class Agent(Snake):
         self.model = self.get_model(model_name)
         self.display_stats()
         self.learn = learn
+        self.session_over = False
 
     def __str__(self) -> str:
         return str(self.model)
@@ -188,8 +189,10 @@ class Agent(Snake):
         print(Colors.BHWHITE, end="")
         print(f"Max movements: {BHYELLOW}{self.model['max_movements']}", RESET)
 
-    def visualization_history(self):
+    def visualization_history(self, history: list = None):
 
+        if history is None:
+            history = self.model['history']
         fig, axis = plt.subplots(3, 1)
         fig.canvas.manager.set_window_title("Model Visualization")
 
@@ -200,11 +203,11 @@ class Agent(Snake):
         #         movement,
         #         0 if type_action == "EXPLORATION" else 1
         #     ))
-        iteration = range(len(self.model['history']))
-        stat_len = [elt[0] for elt in self.model['history']]
-        stat_ga = [elt[1] for elt in self.model['history']]
-        stat_ra = [elt[2] for elt in self.model['history']]
-        stat_movement = [elt[3] for elt in self.model['history']]
+        iteration = range(len(history))
+        stat_len = [elt[0] for elt in history]
+        stat_ga = [elt[1] for elt in history]
+        stat_ra = [elt[2] for elt in history]
+        stat_movement = [elt[3] for elt in history]
 
         axis_len = axis[0]
         axis_apple = axis[1]
@@ -298,16 +301,21 @@ class Agent(Snake):
         # GA_UP|GA_DOWN|GA_LEFT|GA_RIGHT|OBS_NEAR_UP|...|
         ga_char = self.GREEN_APPLE['char']
         state = ""
-        # state += "y" if up_line.find(ga_char) != -1 else "n"
-        # state += "y" if down_line.find(ga_char) != -1 else "n"
-        # state += "y" if left_line.find(ga_char) != -1 else "n"
-        # state += "y" if right_line.find(ga_char) != -1 else "n"
+
+        state += "y" if up_line.find(ga_char) != -1 else "n"
+        state += "y" if down_line.find(ga_char) != -1 else "n"
+        state += "y" if left_line.find(ga_char) != -1 else "n"
+        state += "y" if right_line.find(ga_char) != -1 else "n"
 
         state += self.__get_near_value(up_line)
         state += self.__get_near_value(down_line)
         state += self.__get_near_value(left_line)
         state += self.__get_near_value(right_line)
 
+        if self.session_over == True:
+            state += "1"
+        else:
+            state += "0"
         return state
 
     def make_action(self, action: tuple[int]) -> tuple[str, int, bool]:
@@ -317,19 +325,15 @@ class Agent(Snake):
         new_pos_i = head_i + action[0]
         new_pos_j = head_j + action[1]
 
-        index_action = self.directions.index(action)
-        cur_state = self.board_state()
-        if cur_state[index_action] == "y" and cur_state[4 + index_action] == "G":
-            reward = 1
-        else:
-            reward = -1
+        reward = -2
         is_game_over = False
         if self.board[new_pos_i][new_pos_j] == self.GREEN_APPLE['char']:
-            reward = 10
+            reward = 20
         elif self.board[new_pos_i][new_pos_j] == self.RED_APPLE['char']:
-            reward = -10
+            reward = -20
         if self.next_frame(action) is False:
-            reward = -350
+            self.session_over = True
+            reward = -50
             is_game_over = True
         state = self.board_state()
 
@@ -376,13 +380,16 @@ class Agent(Snake):
         if previous_action == "":
             return
         os.system('clear')
+        print(Colors.BHWHITE, end="Previous State: ")
+        print(f"{Colors.BHYELLOW}{state}", end="")
+        print(Colors.BHWHITE, end=" | Current State: ")
+        print(f"{Colors.BHYELLOW}{self.board_state()}")
+
         if type_action == "EXPLORATION":
             print(f"{Colors.BHCYAN}{type_action}{Colors.RESET}", end="")
         else:
             print(f"{Colors.BHMAG}{type_action}{Colors.RESET}", end="")
 
-        print(Colors.BHWHITE, end=" | State: ")
-        print(f"{Colors.BHYELLOW}{state}", end="")
 
         print(Colors.BHWHITE, end=" | Reward: ")
         if previous_reward < 0:
@@ -396,6 +403,10 @@ class Agent(Snake):
         self.display_board_and_vision()
         time.sleep(waiting_time)
 
+    def new_game(self):
+        super().new_game()
+        self.session_over = False
+
     def run_agent(
             self,
             learning_rate: float = 0.1,
@@ -403,10 +414,12 @@ class Agent(Snake):
             epsilon: float = 1.0,
             epsilon_decay: float = 0.995,
             epsilon_min: float = 0.01,
+            visualization: bool = False,
             speed: float = 0.3
-            ):
+            ) -> list:
         if self.sessions_number <= 0:
             return
+        history = []
         for session in range(self.sessions_number):
             self.model["session"] += 1
 
@@ -419,13 +432,13 @@ class Agent(Snake):
             previous_state = ""
             type_action = ""
 
-            while True and (self.learn is False or movement < 500):
+            while True and (self.learn is False or movement < 1500):
                 state = self.board_state()
                 is_new_state = self.model["q_table"].get(state) is None
                 if is_new_state:
                     self.model["q_table"][state] = [0, 0, 0, 0]
 
-                if self.learn is False:
+                if visualization is True:
                     self.__display_session_vision(
                         previous_state,
                         previous_action,
@@ -488,13 +501,19 @@ class Agent(Snake):
             if epsilon > epsilon_min:
                 epsilon *= epsilon_decay
 
-            self.model['history'].append((
-                self.snake_length,
-                self.green_apple_eat,
-                self.red_apple_eat,
-                movement
-            ))
+            history.append((
+                    self.snake_length,
+                    self.green_apple_eat,
+                    self.red_apple_eat,
+                    movement
+                ))
             if self.learn is True:
+                self.model['history'].append((
+                    self.snake_length,
+                    self.green_apple_eat,
+                    self.red_apple_eat,
+                    movement
+                ))
                 print(Colors.BHWHITE, end="")
                 print(f"Session n°{session + 1}, ", end="")
                 print(f"Total Reward: {total_reward}, ", end="")
@@ -506,30 +525,34 @@ class Agent(Snake):
             self.model["max_length"] = self.max_snake_length
             self.display_stats()
         else:
-            self.__display_session_vision(
-                previous_state,
-                previous_action,
-                type_action,
-                previous_reward,
-                speed
-            )
-            self.display_training_session_result(
-                total_reward,
-                movement
-            )
+            if visualization is True:
+                self.__display_session_vision(
+                    previous_state,
+                    previous_action,
+                    type_action,
+                    previous_reward,
+                    speed
+                )
+            if self.sessions_number == 1:
+                self.display_training_session_result(
+                    total_reward,
+                    movement
+                )
+        return history
 
 
 if __name__ == "__main__":
     # from pprint import pprint
     # from MeasureTime import MeasureTime
 
-    # agent = Agent(model_file="models/10sess.json")
-    MAIN = 0
+    # agent = Agent(model_file="models/10sess.jso0")
+    MAIN = 1
 
     if MAIN == 0:  # TRAINING
         agent = Agent(
+            board_size=15,
             model_name=None,
-            sessions_number=1000,
+            sessions_number=5000,
             learn=True)
         # agent.display_board_and_vision()
         agent.run_agent(
@@ -543,7 +566,7 @@ if __name__ == "__main__":
 
     elif MAIN == 1:  # USE MODEL
         agent = Agent(
-            board_size=10,
+            board_size=15,
             model_name="models/tmp.json",
             sessions_number=1,
             learn=False
@@ -555,15 +578,22 @@ if __name__ == "__main__":
             epsilon=0,
             epsilon_decay=0.995,
             epsilon_min=0.01,
-            speed=0.05)
+            visualization=True,
+            speed=0.04)
     elif MAIN == 2:  # VIEW MODEL
         agent = Agent(
             board_size=10,
             model_name="models/tmp.json",
-            sessions_number=1,
+            sessions_number=50,
             learn=False
         )
-        agent.visualization_history()
+        history = agent.run_agent(
+            epsilon=0,
+            epsilon_decay=0.995,
+            epsilon_min=0.01,
+            speed=0.1)
+        agent.visualization_history(history)
+
     # mt.stop()
     # agent.save_model()
     # print(agent)
