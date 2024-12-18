@@ -125,9 +125,12 @@ class Agent(Snake):
         try:
             with open(file, "w") as f:
                 json.dump(self.model, f, indent=4)
+            BHGREEN = Colors.BHGREEN
+            RESET = Colors.RESET
+            print(f"{BHGREEN}Model has been saved in: {RESET}", end="")
+            print(f"{Colors.BHWHITE}{file}{RESET}")
         except Exception as e:
             print(f"Error: {e}")
-        print(file)
 
     def display_stats(self):
         RESET = Colors.RESET
@@ -141,6 +144,28 @@ class Agent(Snake):
         print(f"Max length: {BHGREEN}{self.model['max_length']}", RESET)
         print(Colors.BHWHITE, end="")
         print(f"Max movements: {BHYELLOW}{self.model['max_movements']}", RESET)
+
+    def display_training_session_result(
+            self,
+            total_rewards,
+            movements
+            ):
+        RESET = Colors.RESET
+        BHCYAN = Colors.BHCYAN
+        BHGREEN = Colors.BHGREEN
+        BHYELLOW = Colors.BHYELLOW
+        BHMAG = Colors.BHMAG
+        print(f"{BHGREEN}==== Session Stats ===={RESET}")
+        print(Colors.BHWHITE, end="")
+        print(f"Total Rewards: {BHCYAN}{total_rewards}", RESET)
+        print(Colors.BHWHITE, end="")
+        print(f"Green Apple: {BHGREEN}{self.green_apple_eat}", RESET)
+        print(Colors.BHWHITE, end="")
+        print(f"Red Apple: {BHGREEN}{self.red_apple_eat}", RESET)
+        print(Colors.BHWHITE, end="")
+        print(f"Max length: {BHMAG}{self.max_snake_length}", RESET)
+        print(Colors.BHWHITE, end="")
+        print(f"Movements: {BHYELLOW}{movements}", RESET)
 
     #####################################
     # REINFORCEMENT LEARNING
@@ -246,7 +271,6 @@ class Agent(Snake):
         self._place_snake()
         if apple is not None:
             self._place_random_apple(apple)
-        # self.display_board()
         return True
 
     def make_action(self, action: tuple[int]) -> tuple[str, int, bool]:
@@ -266,21 +290,8 @@ class Agent(Snake):
             reward = -30
             is_game_over = True
         state = self.board_state()
-        # for i in range(4):
-        #     if state[i] == "y" and state[4 + i] == "G":
-        #         reward += 2
 
         return state, reward, is_game_over
-
-    def __get_max_value(self, state, action: tuple[int]):
-        return max(self.model["q_table"][state])
-        opposite_direction = (-action[0], -action[1])
-        forbidden_action = self.directions.index(opposite_direction)
-        old_forbidden = self.model["q_table"][state][forbidden_action]
-        self.model["q_table"][state][forbidden_action] = float("-inf")
-        max_value = max(self.model["q_table"][state])
-        self.model["q_table"][state][forbidden_action] = old_forbidden
-        return max_value
 
     def __get_actions(
             self, exclude_directions: list[tuple[int]]) -> list[tuple[int]]:
@@ -311,19 +322,6 @@ class Agent(Snake):
         max_value = max(tmp_list)
         pos = tmp_list.index(max_value)
         return self.directions[pos]
-
-        # if len(allowed_indexes) == len(self.directions):
-        #     return random.choice(self.directions)
-
-        # forbidden_index = self.directions.index(opposite_direction)
-        # old_forbidden = self.model["q_table"][state][forbidden_index]
-        # # print(old_forbidden, forbidden_index)
-        # self.model["q_table"][state][forbidden_index] = less_inf
-        # max_value = max(self.model["q_table"][state])
-        # action_index = self.model["q_table"][state].index(max_value)
-        # action = self.directions[action_index]
-        # self.model["q_table"][state][forbidden_index] = old_forbidden
-        # pass
 
     def __display_session_vision(
             self,
@@ -362,15 +360,17 @@ class Agent(Snake):
             gamma: float = 0.99,  # Weight of next state
             epsilon: float = 1.0,
             epsilon_decay: float = 0.995,
-            epsilon_min: float = 0.01
+            epsilon_min: float = 0.01,
+            speed: float = 0.3
             ):
+        movement = 0
+        total_reward = 0
         for session in range(self.sessions_number):
             self.model["session"] += 1
 
             # INIT GAME
             self.new_game()
             movement = 0
-
             total_reward = 0
             previous_action = ""
             previous_reward = 0
@@ -388,15 +388,15 @@ class Agent(Snake):
                         previous_action,
                         type_action,
                         previous_reward,
-                        0.3
+                        speed
                     )
 
                 head = self.snake[0]
                 direction = head.direction
                 opposite_direction = (-direction[0], -direction[1])
                 exclude_direction = [opposite_direction]
-
                 actions = self.__get_actions(exclude_direction)
+
                 if random.uniform(0, 1) < epsilon:
                     # EXPLORATION | Choose a random action
                     action = random.choice(actions)
@@ -421,7 +421,6 @@ class Agent(Snake):
                     old_value = self.model["q_table"][state][index_action]
                     if self.model["q_table"].get(next_state) is None:
                         self.model["q_table"][next_state] = [0, 0, 0, 0]
-                    next_max_value = self.__get_max_value(next_state, action)
                     next_max_value = max(self.model["q_table"][next_state])
 
                     cur_value = (1 - learning_rate) * old_value
@@ -439,13 +438,22 @@ class Agent(Snake):
             if epsilon > epsilon_min:
                 epsilon *= epsilon_decay
 
-            print(f"Session n°{session + 1}, ", end="")
-            print(f"Total Reward: {total_reward}, ", end="")
-            print(f"Duration: {movement}, ", end="")
-            print(f"Max len: {self.snake_length}")
+            if self.learn is True:
+                print(Colors.BHWHITE, end="")
+                print(f"Session n°{session + 1}, ", end="")
+                print(f"Total Reward: {total_reward}, ", end="")
+                print(f"Duration: {movement}, ", end="")
+                print(f"Max len: {self.snake_length}", end="")
+                print(Colors.RESET)
 
-        self.model["max_length"] = self.max_snake_length
-        self.display_stats()
+        if self.learn is True:
+            self.model["max_length"] = self.max_snake_length
+            self.display_stats()
+        else:
+            self.display_training_session_result(
+                total_reward,
+                movement
+            )
 
 
 if __name__ == "__main__":
@@ -453,10 +461,10 @@ if __name__ == "__main__":
     # from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.json")
-    MAIN = 1
+    MAIN = 0
 
     if MAIN == 0:  # TRAINING
-        agent = Agent(model_name=None, sessions_number=1500, learn=True)
+        agent = Agent(model_name=None, sessions_number=100, learn=True)
         # agent.display_board_and_vision()
         agent.run_agent(epsilon=1, epsilon_decay=0.995, epsilon_min=0.01)
         agent.save_model("tmp.json")
@@ -465,14 +473,18 @@ if __name__ == "__main__":
     elif MAIN == 1:  # USE MODEL
         agent = Agent(
             board_size=10,
-            model_name="tmp.json",
+            model_name="10000sess(3).json",
             sessions_number=1,
             learn=False
         )
         # agent = Agent(sessions_number=1, learn=False)
         # print(agent.board_state())
         # agent.display_board_and_vision()
-        agent.run_agent(epsilon=0, epsilon_decay=0.995, epsilon_min=0.01)
+        agent.run_agent(
+            epsilon=0,
+            epsilon_decay=0.995,
+            epsilon_min=0.01,
+            speed=0.05)
     # mt.stop()
     # agent.save_model()
     # print(agent)
