@@ -253,7 +253,6 @@ def MENU_computor_training(window: Window):
         border_radius=24
     )
 
-
     add_button(
         window=window,
         text="START",

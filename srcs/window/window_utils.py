@@ -75,7 +75,6 @@ def update_button(window, pos: tuple[int, int], onclick: bool = False):
             False
         )
 
-
         # add_triangle_button()
 
     if final_hover:

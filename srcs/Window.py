@@ -6,8 +6,8 @@ from WindowTheme import WindowTheme
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# import sys
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # print(sys.path)
 
 from srcs.Snake import Snake
@@ -47,9 +47,12 @@ class Window:
         self.canvas = pygame.display.set_mode(size=size)
         pygame.display.set_caption(title=title)
         # print(font)
-        self.fontTitle = pygame.font.Font(os.path.join(self.ROOT_PATH, font), 64)
-        self.fontButton = pygame.font.Font(os.path.join(self.ROOT_PATH, font), 48)
-        self.fontText = pygame.font.Font(os.path.join(self.ROOT_PATH, font), 24)
+        self.fontTitle = pygame.font.Font(
+            os.path.join(self.ROOT_PATH, font), 64)
+        self.fontButton = pygame.font.Font(
+            os.path.join(self.ROOT_PATH, font), 48)
+        self.fontText = pygame.font.Font(
+            os.path.join(self.ROOT_PATH, font), 24)
         self.run = False
         self.FPS = FPS
         self.tick = 0
@@ -59,7 +62,12 @@ class Window:
         self.menu = "COMPUTOR_TRAINING_SETTINGS"
 
         self.snake = Snake(size=10, snake_length=3)
-        self.training = Training(board_size=10, sessions_number=1, model=None, learn=False)
+        self.training = Training(
+            board_size=10,
+            sessions_number=1,
+            model=None,
+            learn=False
+        )
         self.max_len = self.snake.max_snake_length
 
         self.next_direction = None
@@ -195,7 +203,8 @@ class Window:
                 if event.type == pygame.QUIT:
                     self.exit_window()
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE and self.is_editing_session_num is False:
+                    is_editing = self.is_editing_session_num is True
+                    if event.key == pygame.K_ESCAPE and is_editing is False:
                         self.exit_window()
                     if self.menu == "GAME_INTERFACE":
                         self.handle_gamekey(event.key)
@@ -204,7 +213,7 @@ class Window:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
-                        if self.is_editing_session_num == True:
+                        if self.is_editing_session_num is True:
                             self.handle_session_typing(pygame.K_ESCAPE)
                         else:
                             onclick = True
@@ -360,7 +369,6 @@ class Window:
         tmp_x = x + 144
         win_utils.add_text(window, str(self.snake.max_snake_length), tmp_x, y)
 
-
     def get_model(self):
         # print(f"Calling loop {self.clock}")
         return str(self.training.model)
@@ -381,7 +389,7 @@ class Window:
         # filename = askopenfilename(title="Select a model")
         filename = askopenfilename(title="Select a model")
         # print(filename)
-        if type(filename) == list or type(filename) == tuple:
+        if filename.isinstance(list) or filename.isinstance(tuple):
             if len(filename) > 0:
                 filename = filename[0]
             else:
@@ -410,6 +418,7 @@ class Window:
     def edit_sessions_number(self):
         self.is_editing_session_num = True
         self.session_num_display = "..."
+
 
 if __name__ == "__main__":
     window = Window(title="SnakeAI", size=(1000, 800))

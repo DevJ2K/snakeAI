@@ -32,6 +32,7 @@ class Training:
             return trunc_word + ".."
         return trunc_word + "..."
 
+
 if __name__ == "__main__":
     training = Training(model="C:/Users/Théo/Desktop/refont_ludilab.zip")
     print(training.get_model_name(5))
