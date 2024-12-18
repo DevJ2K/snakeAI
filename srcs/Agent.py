@@ -93,6 +93,7 @@ class Agent(Snake):
             "session": 0,
             "max_length": 0,
             "max_movements": 0,
+            "history": [],
             "q_table": {}
         }
         if file:
@@ -129,6 +130,11 @@ class Agent(Snake):
         if value is None or not isinstance(value, int):
             print(f"'max_movements' is not found or not an integer. ({value})")
             model['max_movements'] = 0
+
+        value = model.get("history")
+        if value is None or not isinstance(value, int):
+            print(f"'history' is not found or not an array. ({value})")
+            model['history'] = []
 
         value = model.get("q_table")
         if value is None or not isinstance(value, dict):
@@ -181,6 +187,9 @@ class Agent(Snake):
         print(Colors.BHWHITE, end="")
         print(f"Max movements: {BHYELLOW}{self.model['max_movements']}", RESET)
 
+    def visualization_history(self):
+        pass
+
     def display_training_session_result(
             self,
             total_rewards,
@@ -205,21 +214,6 @@ class Agent(Snake):
 
     #####################################
     # REINFORCEMENT LEARNING
-    def __prune_line(self, line: str) -> str:
-
-        prune = False
-        c_wall = self.WALL['char']
-        c_empty = self.EMPTY_SPACE['char']
-        tmp_list = [c_wall, c_empty]
-        for char in line:
-            if char not in tmp_list:
-                prune = True
-                break
-        if prune is False:
-            return line
-        if line.startswith(c_wall):
-            return line.lstrip(c_wall).lstrip(c_empty)
-        return line.rstrip(c_wall).rstrip(c_empty)
 
     def __get_near_value(self, line: str) -> str:
         if len(line) == 0:
@@ -273,42 +267,6 @@ class Agent(Snake):
 
         return state
 
-    def agent_next_frame(self, direction: tuple[int, int]) -> bool:
-        next_i = self.snake[0].i + direction[0]
-        next_j = self.snake[0].j + direction[1]
-        apple = None
-
-        if self.board[next_i][next_j] not in [
-            self.GREEN_APPLE['char'],
-            self.RED_APPLE['char'],
-            self.EMPTY_SPACE['char'],
-        ]:
-            # return_value = False
-            return False
-
-        if self.board[next_i][next_j] == self.GREEN_APPLE['char']:
-            apple = self.GREEN_APPLE
-            self.snake.append(self._new_snake_node())
-            self.green_apple_eat += 1
-            self.snake_length += 1
-            if self.snake_length > self.max_snake_length:
-                self.max_snake_length = self.snake_length
-        elif self.board[next_i][next_j] == self.RED_APPLE['char']:
-            if self.snake_length == 1:
-                self.snake_length -= 1
-                return False
-            apple = self.RED_APPLE
-            pop_node = self.snake.pop()
-            self.board[pop_node.i][pop_node.j] = self.EMPTY_SPACE['char']
-            self.red_apple_eat += 1
-            self.snake_length -= 1
-
-        self.update_snake_nodes(direction, apple == self.GREEN_APPLE)
-        self._place_snake()
-        if apple is not None:
-            self._place_random_apple(apple)
-        return True
-
     def make_action(self, action: tuple[int]) -> tuple[str, int, bool]:
         head_i = self.snake[0].i
         head_j = self.snake[0].j
@@ -319,11 +277,11 @@ class Agent(Snake):
         reward = -1
         is_game_over = False
         if self.board[new_pos_i][new_pos_j] == self.GREEN_APPLE['char']:
-            reward = 10
+            reward = 15
         elif self.board[new_pos_i][new_pos_j] == self.RED_APPLE['char']:
             reward = -10
         if self.next_frame(action) is False:
-            reward = -30
+            reward = -50
             is_game_over = True
         state = self.board_state()
 
@@ -399,8 +357,8 @@ class Agent(Snake):
             epsilon_min: float = 0.01,
             speed: float = 0.3
             ):
-        movement = 0
-        total_reward = 0
+        if self.sessions_number <= 0:
+            return
         for session in range(self.sessions_number):
             self.model["session"] += 1
 
@@ -415,7 +373,8 @@ class Agent(Snake):
 
             while True and (self.learn is False or movement < 500):
                 state = self.board_state()
-                if self.model["q_table"].get(state) is None:
+                is_new_state = self.model["q_table"].get(state) is None
+                if is_new_state:
                     self.model["q_table"][state] = [0, 0, 0, 0]
 
                 if self.learn is False:
@@ -474,6 +433,12 @@ class Agent(Snake):
             if epsilon > epsilon_min:
                 epsilon *= epsilon_decay
 
+            self.model['history'].append((
+                self.snake_length,
+                self.green_apple_eat,
+                self.red_apple_eat,
+                movement
+            ))
             if self.learn is True:
                 print(Colors.BHWHITE, end="")
                 print(f"Session n°{session + 1}, ", end="")
@@ -486,6 +451,13 @@ class Agent(Snake):
             self.model["max_length"] = self.max_snake_length
             self.display_stats()
         else:
+            self.__display_session_vision(
+                previous_state,
+                previous_action,
+                type_action,
+                previous_reward,
+                speed
+            )
             self.display_training_session_result(
                 total_reward,
                 movement
@@ -497,22 +469,26 @@ if __name__ == "__main__":
     # from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.json")
-    MAIN = 0
+    MAIN = 1
 
     if MAIN == 0:  # TRAINING
         agent = Agent(
-            model_name="models/100sess.json",
-            sessions_number=10,
+            model_name=None,
+            sessions_number=2500,
             learn=True)
         # agent.display_board_and_vision()
-        agent.run_agent(epsilon=1, epsilon_decay=0.995, epsilon_min=0.01)
+        agent.run_agent(
+            epsilon=1,
+            gamma=0.85,
+            epsilon_decay=0.995,
+            epsilon_min=0.01)
         agent.save_model("tmp.json")
         # agent.display_stats()
 
     elif MAIN == 1:  # USE MODEL
         agent = Agent(
             board_size=10,
-            model_name="10000sess(3).json",
+            model_name="models/tmp.json",
             sessions_number=1,
             learn=False
         )

@@ -9,7 +9,8 @@ def test_open_model_wrong_args():
         "session": 0,
         "max_length": 0,
         "max_movements": 0,
-        "q_table": {}
+        "q_table": {},
+        "history": []
     }
     files = [
         "invalid_models/no_args.json",
