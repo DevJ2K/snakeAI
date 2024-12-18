@@ -7,6 +7,7 @@ import srcs.utils.Colors as Colors
 import srcs.utils.agent_utils as agent_utils
 import json
 import time
+import matplotlib.pyplot as plt
 
 
 class Agent(Snake):
@@ -132,7 +133,7 @@ class Agent(Snake):
             model['max_movements'] = 0
 
         value = model.get("history")
-        if value is None or not isinstance(value, int):
+        if value is None or not isinstance(value, list):
             print(f"'history' is not found or not an array. ({value})")
             model['history'] = []
 
@@ -188,6 +189,50 @@ class Agent(Snake):
         print(f"Max movements: {BHYELLOW}{self.model['max_movements']}", RESET)
 
     def visualization_history(self):
+
+        fig, axis = plt.subplots(3, 1)
+        fig.canvas.manager.set_window_title("Model Visualization")
+
+        #  self.model['history'].append((
+        #         self.snake_length,
+        #         self.green_apple_eat,
+        #         self.red_apple_eat,
+        #         movement,
+        #         0 if type_action == "EXPLORATION" else 1
+        #     ))
+        iteration = range(len(self.model['history']))
+        stat_len = [elt[0] for elt in self.model['history']]
+        stat_ga = [elt[1] for elt in self.model['history']]
+        stat_ra = [elt[2] for elt in self.model['history']]
+        stat_movement = [elt[3] for elt in self.model['history']]
+
+        axis_len = axis[0]
+        axis_apple = axis[1]
+        axis_movement = axis[2]
+
+        axis_len.plot(iteration, stat_len, c='g')
+        axis_len.legend(['Snake Max Length'], loc='upper right')
+        axis_len.set_title("Snake max length Over Sessions")
+        axis_len.set_ylim(bottom=0)
+
+        axis_apple.plot(iteration, stat_ga, c='g')
+        axis_apple.plot(iteration, stat_ra, c='r')
+        axis_apple.legend(
+            ['Eaten green apples', 'Eaten red apples'],
+            loc='upper right')
+        axis_apple.set_title("Eaten Green vs Red Apples Over Sessions")
+        axis_apple.set_ylim(bottom=0)
+
+        axis_movement.plot(iteration, stat_movement, c='b')
+        axis_movement.legend(['Snake movement'], loc='upper right')
+        axis_movement.set_title("Snake movement Over Sessions")
+        axis_movement.set_ylim(bottom=0)
+
+        print(iteration)
+        print(self.model['history'][0])
+
+        plt.tight_layout()
+        plt.show()
         pass
 
     def display_training_session_result(
@@ -469,17 +514,17 @@ if __name__ == "__main__":
     # from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.json")
-    MAIN = 1
+    MAIN = 2
 
     if MAIN == 0:  # TRAINING
         agent = Agent(
             model_name=None,
-            sessions_number=2500,
+            sessions_number=500,
             learn=True)
         # agent.display_board_and_vision()
         agent.run_agent(
             epsilon=1,
-            gamma=0.85,
+            gamma=0.99,
             epsilon_decay=0.995,
             epsilon_min=0.01)
         agent.save_model("tmp.json")
@@ -500,6 +545,14 @@ if __name__ == "__main__":
             epsilon_decay=0.995,
             epsilon_min=0.01,
             speed=0.05)
+    elif MAIN == 2:  # VIEW MODEL
+        agent = Agent(
+            board_size=10,
+            model_name="models/tmp.json",
+            sessions_number=1,
+            learn=False
+        )
+        agent.visualization_history()
     # mt.stop()
     # agent.save_model()
     # print(agent)
