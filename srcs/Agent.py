@@ -443,9 +443,10 @@ class Agent(Snake):
                     )
 
                 head = self.snake[0]
-                direction = head.direction
-                opposite_direction = (-direction[0], -direction[1])
-                exclude_direction = [opposite_direction]
+                # direction = head.direction
+                # opposite_direction = (-direction[0], -direction[1])
+                # exclude_direction = [opposite_direction]
+                exclude_direction = []
                 actions = self.__get_actions(exclude_direction)
 
                 if random.uniform(0, 1) < epsilon:
@@ -532,16 +533,16 @@ class Agent(Snake):
 
 if __name__ == "__main__":
     # from pprint import pprint
-    # from MeasureTime import MeasureTime
+    from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.jso0")
-    MAIN = 2
+    MAIN = 1
 
     if MAIN == 0:  # TRAINING
         agent = Agent(
-            board_size=15,
+            board_size=10,
             model_name=None,
-            sessions_number=5000,
+            sessions_number=2500,
             learn=True)
         # agent.display_board_and_vision()
         agent.run_agent(
@@ -549,26 +550,28 @@ if __name__ == "__main__":
             gamma=0.99,
             epsilon_decay=0.995,
             epsilon_min=0.01)
-        agent.save_model("tmp.json")
+        agent.save_model("tmp.txt")
         agent.visualization_history()
         # agent.display_stats()
 
     elif MAIN == 1:  # USE MODEL
         agent = Agent(
-            board_size=15,
-            model_name="models/tmp.json",
+            board_size=10,
+            model_name="models/tmp.txt",
             sessions_number=1,
             learn=False
         )
         # agent = Agent(sessions_number=1, learn=False)
         # print(agent.board_state())
         # agent.display_board_and_vision()
+        # mt = MeasureTime(True)
         agent.run_agent(
             epsilon=0,
             epsilon_decay=0.995,
             epsilon_min=0.01,
             visualization=True,
-            speed=0.04)
+            speed=0.05)
+        # mt.stop()
     elif MAIN == 2:  # VIEW MODEL
         agent = Agent(
             board_size=10,
