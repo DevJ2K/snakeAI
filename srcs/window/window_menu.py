@@ -232,7 +232,6 @@ def MENU_computor_visualization(window: Window):
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
         func=window.run_computor_visualization,
-        func_params="MODEL_VISUALIZATION"
     )
 
     add_button(
@@ -363,7 +362,6 @@ def MENU_computor_training(window: Window):
         bg_default=window.theme['btn'],
         bg_hover=window.theme['btn-hover'],
         func=window.run_computor_visualization,
-        func_params="TRAINING_VISUALIZATION"
     )
 
     add_button(
@@ -381,17 +379,28 @@ def MENU_computor_training(window: Window):
 ###################################
 # COMPUTOR VISUALIZATION ##########
 ###################################
-def RUN_training_visualization(window: Window):
+def RUN_model_visualization(window: Window):
     # draw_snake = window.snake.game_over is False
-    value = window.create_snakeboard(window.snake.size, True)
+    window.create_snakeboard(window.snake.size, True)
     agent = window.agent
 
     font_text = window.get_font(size=36)
     font_subtext = window.get_font(size=30)
 
-    # add_text(window, "Press 'left' or 'right' arrow to "
-    #          f"increase the speed. ({window.speed})",
-    #          y=120)
+    if window.agent.w_is_model_use is True:
+        add_text(window, "Press 'left' or 'right' arrow to "
+                    f"change the speed. ({window.speed})",
+                    y=120)
+    else:
+        if window.agent.w_save_path is not None:
+            if window.agent.w_save_path[0] == "success":
+                file = window.agent.w_save_path[1]
+                add_text(window, f"Saved in {file}", y=150)
+            elif window.agent.w_save_path[0] == "failure":
+                add_text(window, f"Failed to save in {file}", y=150)
+        else:
+            add_text(window, f"Do you want to save the model?", y=150)
+
 
     add_text(
         window,
@@ -435,7 +444,7 @@ def RUN_training_visualization(window: Window):
     )
     add_text(
         window,
-        "6m14s",
+        f"{window.agent.get_total_duration():.2f}s",
         x=120,
         y=window.SCREEN_HEIGHT / 2 + 30,
         shadow={
@@ -499,23 +508,47 @@ def RUN_training_visualization(window: Window):
             border_radius=16
         )
 
-    add_button(
-            window=window,
-            text="END TRAINING",
-            y=window.SCREEN_HEIGHT - 100,
-            bg_default=window.theme['btn'],
-            bg_hover=window.theme['btn-hover'],
-            func=window.leave_game
-        )
+    if window.agent.w_is_model_use:
+        if window.agent.learn:
+            text = "END TRAINING"
+        else:
+            text = "END SESSION"
+        add_button(
+                window=window,
+                text=text,
+                y=window.SCREEN_HEIGHT - 100,
+                bg_default=window.theme['btn'],
+                bg_hover=window.theme['btn-hover'],
+                func=agent.stop_visualization
+            )
+    else:
+        if agent.w_save_path is not None:
+            add_button(
+                window=window,
+                text="LEAVE",
+                y=window.SCREEN_HEIGHT - 100,
+                bg_default="#d21b13",
+                bg_hover="#9d0b04",
+                func=window.switch_menu,
+                func_params="COMPUTOR_MENU"
+            )
+        else:
+            add_button(
+                window=window,
+                text="NO",
+                x=window.SCREEN_WIDTH / 2 - 100,
+                y=window.SCREEN_HEIGHT - 100,
+                bg_default='#CC0000',
+                bg_hover='#990000',
+                func=agent.w_not_save_model
+            )
 
-
-def RUN_model_visualization(window: Window):
-
-    add_button(
-            window=window,
-            text="END SESSION",
-            y=window.SCREEN_HEIGHT - 100,
-            bg_default=window.theme['btn'],
-            bg_hover=window.theme['btn-hover'],
-            func=window.leave_game
-        )
+            add_button(
+                window=window,
+                text="YES",
+                x=window.SCREEN_WIDTH / 2 + 40,
+                y=window.SCREEN_HEIGHT - 100,
+                bg_default='#00AA00',
+                bg_hover='#007700',
+                func=agent.w_save_model
+            )

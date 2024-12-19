@@ -7,10 +7,10 @@ from WindowTheme import WindowTheme
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 from srcs.Snake import Snake
-from srcs.Training import Training
 from srcs.Agent import Agent
 import window.window_menu as win_screen
 import window.window_utils as win_utils
+import time
 
 
 class Window:
@@ -56,7 +56,7 @@ class Window:
         self.last_tick = 0
         self.theme = theme.get()
 
-        self.menu = "TRAINING_VISUALIZATION"
+        self.menu = "COMPUTOR_TRAINING_SETTINGS"
 
         self.computor_vision = False
 
@@ -72,7 +72,7 @@ class Window:
         self.max_len = self.snake.max_snake_length
 
         self.next_direction = None
-        self.speed = 2
+        self.speed = 7
 
         # Window Interface Handling
         self.buttons = []
@@ -98,8 +98,6 @@ class Window:
             win_screen.MENU_computor_visualization(self)
         elif self.menu == "COMPUTOR_TRAINING_SETTINGS":
             win_screen.MENU_computor_training(self)
-        elif self.menu == "TRAINING_VISUALIZATION":
-            win_screen.RUN_training_visualization(self)
         elif self.menu == "MODEL_VISUALIZATION":
             win_screen.RUN_model_visualization(self)
         else:
@@ -112,6 +110,7 @@ class Window:
         self.max_len = max(self.max_len, old_max_len)
         self.switch_menu("GAME_INTERFACE")
         self.snake = Snake()
+        self.speed = 7
         self.snake.max_snake_length = self.max_len
 
     def run_settings_vision(self):
@@ -134,20 +133,27 @@ class Window:
         self.session_num_display: str = str(self.agent.sessions_number)
         self.switch_menu("COMPUTOR_TRAINING_SETTINGS")
 
-    def run_computor_visualization(self, window_name: str):
+    def run_computor_visualization(self):
         self.snake = self.agent
         self.agent.w_is_alive = True
         self.computor_vision = False
+        self.agent.w_is_model_use = True
         # VARIABLES USEFUL (w_ == window)
+        self.agent.sessions_number = int(self.session_num_display)
         self.agent.w_session = 0
         self.agent.w_session_max_movements = 0
+        self.agent.w_max_session_duration = 0
         self.agent.w_history = []
-        self.agent.w_is_alive = False
         self.agent.w_epsilon = 1.0
         self.agent.w_epsilon_decay = 0.995
         self.agent.w_gamma = 0.99
         self.agent.w_epsilon_min = 0.01
-        self.switch_menu(window_name)
+        self.w_save_path = None
+        self.agent.w_all_sessions_start = time.time()
+        self.agent.w_session_start = time.time()
+        self.agent.w_prune_session = False
+
+        self.switch_menu("MODEL_VISUALIZATION")
 
 
     def toggle_computor_vision(self):
@@ -159,7 +165,6 @@ class Window:
         last_tick = (self.last_tick * self.speed) % self.FPS
 
         if tick < last_tick:
-            print("Action")
             self.agent.run_dynamic_agent(visualization=False)
             # if self.snake.next_frame(self.next_direction) is False:
             #     self.handle_gameover()
@@ -273,7 +278,7 @@ class Window:
             if self.menu == "GAME_INTERFACE":
                 self.handle_gameloop()
 
-            if self.menu == "TRAINING_VISUALIZATION":
+            elif self.menu == "MODEL_VISUALIZATION":
                 self.handle_agent_training()
 
             win_utils.update_button(self, pygame.mouse.get_pos(), onclick)
@@ -458,7 +463,7 @@ class Window:
         win_utils.add_image(window, "timer.png", x + 120, y, 32, 32)
         win_utils.add_text(
             window,
-            f"{16.75:.2f}s",
+            f"{self.agent.get_session_duration():.2f}s",
             x + 164,
             y - 4,
             font=font
@@ -472,7 +477,7 @@ class Window:
         # win_utils.add_image(window, "len.png", x, y, 48, 32)
         win_utils.add_text(
             window,
-            str(self.snake.snake_length),
+            str(self.snake.max_snake_length),
             x + 44,
             y - 4,
             font=font
@@ -482,7 +487,7 @@ class Window:
         # win_utils.add_image(window, "timer.png", x + 120, y, 32, 32)
         win_utils.add_text(
             window,
-            f"{16.75:.2f}s",
+            f"{self.agent.get_max_duration():.2f}s",
             x + 164,
             y - 4,
             font=font

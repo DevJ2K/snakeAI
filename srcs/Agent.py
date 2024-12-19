@@ -36,6 +36,18 @@ class Agent(Snake):
         self.w_epsilon_decay = 0.995
         self.w_gamma = 0.99
         self.w_epsilon_min = 0.01
+        self.w_movement = 0
+        self.w_total_reward = 0
+        self.w_previous_action = ""
+        self.w_previous_reward = 0
+        self.w_previous_state = ""
+        self.w_type_action = ""
+        self.w_max_session_duration = 0
+        self.w_all_sessions_start = 0
+        self.w_session_start = 0
+        self.w_is_model_use = False
+        self.w_save_path = None
+        self.w_prune_session = False
 
     def __str__(self) -> str:
         return str(self.model)
@@ -194,11 +206,28 @@ class Agent(Snake):
             RESET = Colors.RESET
             print(f"{BHGREEN}Model has been saved in: {RESET}", end="")
             print(f"{Colors.BHWHITE}{file}{RESET}")
+            return ("success", str(file))
         except Exception as e:
             print(Colors.BHRED, end="")
             print(f"Failed to save the model in: {file}", end="")
             print(Colors.RESET)
             print(f"{Colors.RED}{e}{Colors.RESET}")
+            return ("failure", str(file))
+
+    def get_total_duration(self):
+        if self.w_is_model_use:
+            return time.time() - self.w_all_sessions_start
+        return self.w_all_sessions_start
+
+    def get_session_duration(self):
+        if self.w_is_alive:
+            return time.time() - self.w_session_start
+        return self.w_session_start
+
+    def get_max_duration(self):
+        new_max_duration = max(self.w_max_session_duration, self.get_session_duration())
+        self.w_max_session_duration = new_max_duration
+        return self.w_max_session_duration
 
     def display_stats(self):
         RESET = Colors.RESET
@@ -277,12 +306,9 @@ class Agent(Snake):
             print(Colors.BHWHITE, end="")
             print(f"Movements: {BHYELLOW}{movements}", RESET)
         print(Colors.BHWHITE, end="")
-        print(f"Max movements: {BHYELLOW}{movements}", RESET)
+        print(f"Max movements: {BHYELLOW}{session_max_movements}", RESET)
         print(Colors.BHWHITE, end="")
         print(f"Max length: {BHMAG}{self.max_snake_length}", RESET)
-
-    #####################################
-    # REINFORCEMENT LEARNING
 
     def __get_near_value(self, line: str) -> str:
         if len(line) == 0:
@@ -429,6 +455,18 @@ class Agent(Snake):
         super().new_game()
         self.session_over = False
 
+    def stop_visualization(self):
+        self.w_prune_session = True
+        # self.sessions_number = self.w_session
+        # self.w_session_start = time.time() - self.w_session_start
+        # self.w_is_alive = False
+
+    def w_save_model(self):
+        self.w_save_path = self.save_model()
+
+    def w_not_save_model(self):
+        self.w_save_path = ("not", "")
+
     def run_dynamic_agent(
             self,
             learning_rate: float = 0.1,
@@ -438,13 +476,12 @@ class Agent(Snake):
 
         if self.sessions_number <= 0:
             return
+        if self.w_is_model_use is False:
+            return
         history = []
         session_max_movements = 0
         # for session in range(self.sessions_number):
         if self.w_session < self.sessions_number:
-            self.model["session"] += 1
-            self.w_session += 1
-
             if self.w_is_alive is False:
                 # INIT GAME
                 self.new_game()
@@ -454,11 +491,10 @@ class Agent(Snake):
                 self.w_previous_reward = 0
                 self.w_previous_state = ""
                 self.w_type_action = ""
+                self.w_session_start = time.time()
                 self.w_is_alive = True
 
 
-
-            # while True and (self.learn is False or movement < 1500):
             if self.w_is_alive is True and (self.learn is False or self.w_movement < 1500):
                 state = self.board_state()
                 is_new_state = self.model["q_table"].get(state) is None
@@ -512,13 +548,13 @@ class Agent(Snake):
                 self.w_total_reward += reward
                 self.w_movement += 1
 
-                if is_game_over:
+                if is_game_over or self.w_prune_session:
                     self.w_is_alive = False
                 else:
                     return
 
             new_max_movement = max(self.model['max_movements'], self.w_movement)
-            self.w_session_max_movements = max(session_max_movements, self.w_movement)
+            self.w_session_max_movements = new_max_movement
             self.model['max_movements'] = new_max_movement
             if self.w_epsilon > self.w_epsilon_min:
                 self.w_epsilon *= self.w_epsilon_decay
@@ -536,25 +572,33 @@ class Agent(Snake):
                     self.red_apple_eat,
                     self.w_movement
                 ))
-            return
 
-        if self.learn is True:
-            self.model["max_length"] = self.max_snake_length
-            self.display_stats()
+            self.model["session"] += 1
+            self.w_session += 1
+            self.w_session_start = time.time() - self.w_session_start
+            if self.w_prune_session:
+                self.sessions_number = self.w_session
+
         else:
-            if visualization is True:
-                self.__display_session_vision(
-                    self.w_previous_state,
-                    self.w_previous_action,
-                    self.w_type_action,
-                    self.w_previous_reward,
-                    0
+            self.w_all_sessions_start = time.time() - self.w_all_sessions_start
+            self.w_is_model_use = False
+            if self.learn is True:
+                self.model["max_length"] = self.max_snake_length
+                self.display_stats()
+            else:
+                if visualization is True:
+                    self.__display_session_vision(
+                        self.w_previous_state,
+                        self.w_previous_action,
+                        self.w_type_action,
+                        self.w_previous_reward,
+                        0
+                    )
+                self.display_training_session_result(
+                    self.w_total_reward,
+                    self.w_movement,
+                    session_max_movements
                 )
-            self.display_training_session_result(
-                self.w_total_reward,
-                self.w_movement,
-                session_max_movements
-            )
         return history
 
     def run_agent(
