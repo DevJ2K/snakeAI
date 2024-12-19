@@ -135,6 +135,7 @@ class Window:
 
     def run_computor_visualization(self):
         self.snake = self.agent
+        self.speed = 7
         self.agent.w_is_alive = True
         self.computor_vision = False
         self.agent.w_is_model_use = True
@@ -144,7 +145,10 @@ class Window:
         self.agent.w_session_max_movements = 0
         self.agent.w_max_session_duration = 0
         self.agent.w_history = []
-        self.agent.w_epsilon = 1.0
+        if self.agent.learn is True:
+            self.agent.w_epsilon = 1.0
+        else:
+            self.agent.w_epsilon = 0.001
         self.agent.w_epsilon_decay = 0.995
         self.agent.w_gamma = 0.99
         self.agent.w_epsilon_min = 0.01
@@ -191,6 +195,16 @@ class Window:
             self.snake.game_over = True
             self.snake.is_running = False
             self.snake.end_timer()
+
+    def handle_visualization_key(self, key):
+        if key == pygame.K_LEFT:
+            if self.speed > 1:
+                self.speed -= 1
+            return
+        if key == pygame.K_RIGHT:
+            if self.speed < 30:
+                self.speed += 1
+            return
 
     def handle_gamekey(self, key):
         head = self.snake.snake[0]
@@ -264,6 +278,8 @@ class Window:
                         self.exit_window()
                     if self.menu == "GAME_INTERFACE":
                         self.handle_gamekey(event.key)
+                    if self.menu == "MODEL_VISUALIZATION":
+                        self.handle_visualization_key(event.key)
                     if self.is_editing_session_num is True:
                         self.handle_session_typing(event.key)
 
