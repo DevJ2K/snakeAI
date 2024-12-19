@@ -409,7 +409,8 @@ class Agent(Snake):
             epsilon_decay: float = 0.995,
             epsilon_min: float = 0.01,
             visualization: bool = False,
-            speed: float = 0.3
+            speed: float = 0.3,
+            step_by_step: bool = False
             ) -> list:
         if self.sessions_number <= 0:
             return
@@ -442,14 +443,14 @@ class Agent(Snake):
                         speed
                     )
 
-                head = self.snake[0]
+                # head = self.snake[0]
                 # direction = head.direction
                 # opposite_direction = (-direction[0], -direction[1])
                 # exclude_direction = [opposite_direction]
                 exclude_direction = []
                 actions = self.__get_actions(exclude_direction)
 
-                if random.uniform(0, 1) < epsilon:
+                if self.learn and random.uniform(0, 1) < epsilon:
                     # EXPLORATION | Choose a random action
                     action = random.choice(actions)
                     type_action = "EXPLORATION"
@@ -483,8 +484,12 @@ class Agent(Snake):
 
                 total_reward += reward
                 movement += 1
+
                 if is_game_over:
                     break
+                if step_by_step:
+                    input("Press 'enter' to go to the next step...")
+
             new_max_movement = max(self.model['max_movements'], movement)
             session_max_movements = max(session_max_movements, movement)
             self.model['max_movements'] = new_max_movement
@@ -533,7 +538,7 @@ class Agent(Snake):
 
 if __name__ == "__main__":
     # from pprint import pprint
-    from MeasureTime import MeasureTime
+    # from MeasureTime import MeasureTime
 
     # agent = Agent(model_file="models/10sess.jso0")
     MAIN = 1

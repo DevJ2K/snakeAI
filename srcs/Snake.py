@@ -11,9 +11,12 @@ class SnakeError(Exception):
 
 class Snake:
     def __init__(self, size: int = 10, snake_length: int = 3) -> None:
-        if size < 10 or size % 5 != 0:
+        # if size < 10 or size % 5 != 0:
+        #     raise SnakeError("The board size must be greater than "
+        #                      "or equal to 10 and divisible by 5.")
+        if size < 10:
             raise SnakeError("The board size must be greater than "
-                             "or equal to 10 and divisible by 5.")
+                             "or equal to 10.")
         if snake_length < 1 or 3 < snake_length:
             raise SnakeError("The snake length must be greater than "
                              "or equal to 1.")

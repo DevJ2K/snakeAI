@@ -12,10 +12,10 @@ def test_snake_instanciation():
 
 
 def test_snake_invalid_board_size():
-    sizes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 16]
+    sizes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     for size in sizes:
         with pytest.raises(SnakeError):
-            Snake(size=size, snake_length=5)
+            Snake(size=size, snake_length=3)
 
 
 def test_snake_invalid_snake_length():
