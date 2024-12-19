@@ -111,7 +111,6 @@ class Agent(Snake):
                 print(Colors.RESET)
                 print(f"{Colors.RED}{e}{Colors.RESET}")
 
-
         print(Colors.BRED, end="")
         value = model.get("session")
         if value is None or not isinstance(value, int):
@@ -139,16 +138,15 @@ class Agent(Snake):
             model['q_table'] = {}
         print(Colors.RESET, end="")
 
-        time.sleep(3)
         return model
 
     def save_model(self, filename: str = None):
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        model_dir = os.path.join(root_dir, "models")
         if filename:
             file = os.path.abspath(filename)
             # file = os.path.join(model_dir, filename)
         else:
-            root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            model_dir = os.path.join(root_dir, "models")
             i = 0
             while True:
                 name = ""

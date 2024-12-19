@@ -43,7 +43,9 @@ def main():
 
     parser.add_argument(
         '-save',
-        type=str,
+        nargs='?',
+        const=True,
+        default=False,
         help="Path to save the trained model after the "
         "session. The model will be stored in the specified file."
     )
@@ -102,8 +104,11 @@ def main():
             speed=speed,
             step_by_step=stepbystep
         )
-        if save_model is not None:
-            agent.save_model(save_model)
+        if save_model is not False:
+            if save_model is True:
+                agent.save_model()
+            else:
+                agent.save_model(save_model)
         if sessions_number > 1:
             agent.visualization_history(history)
 
