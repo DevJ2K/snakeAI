@@ -496,8 +496,7 @@ class Agent(Snake):
                 self.w_session_start = time.time()
                 self.w_is_alive = True
 
-            condition = self.learn is False or self.w_movement < 1500
-            if self.w_is_alive is True and condition:
+            if self.w_is_alive is True and self.w_movement < 3000:
                 state = self.board_state()
                 is_new_state = self.model["q_table"].get(state) is None
                 if is_new_state:
@@ -633,9 +632,13 @@ class Agent(Snake):
             previous_state = ""
             type_action = ""
 
-            condition1 = (self.learn is False and movement < 2000)
-            condition2 = (self.learn is True and movement < 1500)
-            while True and (condition1 or condition2):
+            while True and movement < 3000:
+                # if (self.learn is False and movement < 3000):
+                #     pass
+                # elif (self.learn is True and movement < 1500):
+                #     pass
+                # else:
+                #     break
                 state = self.board_state()
                 is_new_state = self.model["q_table"].get(state) is None
                 if is_new_state:
