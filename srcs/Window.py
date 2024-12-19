@@ -6,8 +6,8 @@ import pygame.gfxdraw
 from WindowTheme import WindowTheme
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
-from srcs.Snake import Snake
-from srcs.Agent import Agent
+from Snake import Snake
+from Agent import Agent
 import window.window_menu as win_screen
 import window.window_utils as win_utils
 import time
@@ -195,7 +195,7 @@ class Window:
 
     def handle_gamekey(self, key):
         head = self.snake.snake[0]
-        if window.snake.is_running is False and window.snake.game_over is True:
+        if self.snake.is_running is False and self.snake.game_over is True:
             if key == pygame.K_SPACE or key == pygame.K_RETURN:
                 self.start_new_snake()
         if self.snake.game_over is True:
@@ -307,7 +307,7 @@ class Window:
             x += pattern_size
 
         win_utils.add_text(
-            window,
+            self,
             text="SNAKE",
             y=32,
             color="#FFFFFF",
@@ -437,32 +437,32 @@ class Window:
 
     def display_game_info(self, y: int):
         x = self.SCREEN_WIDTH / 2
-        win_utils.add_image(window, "len.png", x - 160, y, 48, 32)
-        win_utils.add_text(window, str(self.snake.snake_length), x - 100, y)
+        win_utils.add_image(self, "len.png", x - 160, y, 48, 32)
+        win_utils.add_text(self, str(self.snake.snake_length), x - 100, y)
 
-        win_utils.add_image(window, "timer.png", x - 40, y, 32, 32)
-        win_utils.add_text(window, f"{self.snake.get_timer():.2f}s", x + 2, y)
+        win_utils.add_image(self, "timer.png", x - 40, y, 32, 32)
+        win_utils.add_text(self, f"{self.snake.get_timer():.2f}s", x + 2, y)
 
-        win_utils.add_image(window, "trophy.png", x + 100, y, 32, 32)
+        win_utils.add_image(self, "trophy.png", x + 100, y, 32, 32)
         tmp_x = x + 144
-        win_utils.add_text(window, str(self.snake.max_snake_length), tmp_x, y)
+        win_utils.add_text(self, str(self.snake.max_snake_length), tmp_x, y)
 
     def display_current_session(self, font):
-        x = window.SCREEN_WIDTH - 300
-        y = window.SCREEN_HEIGHT / 2 + 40
+        x = self.SCREEN_WIDTH - 300
+        y = self.SCREEN_HEIGHT / 2 + 40
 
-        win_utils.add_image(window, "len.png", x, y, 48, 32)
+        win_utils.add_image(self, "len.png", x, y, 48, 32)
         win_utils.add_text(
-            window,
+            self,
             str(self.snake.snake_length),
             x + 60,
             y - 4,
             font=font
         )
 
-        win_utils.add_image(window, "timer.png", x + 120, y, 32, 32)
+        win_utils.add_image(self, "timer.png", x + 120, y, 32, 32)
         win_utils.add_text(
-            window,
+            self,
             f"{self.agent.get_session_duration():.2f}s",
             x + 164,
             y - 4,
@@ -470,35 +470,35 @@ class Window:
         )
 
     def display_best_session(self, font):
-        x = window.SCREEN_WIDTH - 300
-        y = window.SCREEN_HEIGHT / 2 - 90
+        x = self.SCREEN_WIDTH - 300
+        y = self.SCREEN_HEIGHT / 2 - 90
 
-        win_utils.add_image(window, "trophy.png", x, y, 32, 32)
-        # win_utils.add_image(window, "len.png", x, y, 48, 32)
+        win_utils.add_image(self, "trophy.png", x, y, 32, 32)
+        # win_utils.add_image(self, "len.png", x, y, 48, 32)
         win_utils.add_text(
-            window,
+            self,
             str(self.snake.max_snake_length),
             x + 44,
             y - 4,
             font=font
         )
 
-        win_utils.add_image(window, "timer.png", x + 120, y, 32, 32)
-        # win_utils.add_image(window, "timer.png", x + 120, y, 32, 32)
+        win_utils.add_image(self, "timer.png", x + 120, y, 32, 32)
+        # win_utils.add_image(self, "timer.png", x + 120, y, 32, 32)
         win_utils.add_text(
-            window,
+            self,
             f"{self.agent.get_max_duration():.2f}s",
             x + 164,
             y - 4,
             font=font
         )
 
-        # win_utils.add_image(window, "timer.png", x - 40, y, 32, 32)
-        # win_utils.add_text(window, f"{self.snake.get_timer():.2f}s", x + 2, y)
+        # win_utils.add_image(self, "timer.png", x - 40, y, 32, 32)
+        # win_utils.add_text(self, f"{self.snake.get_timer():.2f}s", x + 2, y)
 
-        # win_utils.add_image(window, "trophy.png", x + 100, y, 32, 32)
+        # win_utils.add_image(self, "trophy.png", x + 100, y, 32, 32)
         # tmp_x = x + 144
-        # win_utils.add_text(window, str(self.snake.max_snake_length), tmp_x, y)
+        # win_utils.add_text(self, str(self.snake.max_snake_length), tmp_x, y)
 
     def get_model(self):
         # print(f"Calling loop {self.clock}")
