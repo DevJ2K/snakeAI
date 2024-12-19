@@ -1,3 +1,4 @@
+import add_path
 import os
 import pygame
 import platform
@@ -5,13 +6,9 @@ import pygame.gfxdraw
 from WindowTheme import WindowTheme
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
-
-# import sys
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# print(sys.path)
-
 from srcs.Snake import Snake
 from srcs.Training import Training
+from srcs.Agent import Agent
 import window.window_menu as win_screen
 import window.window_utils as win_utils
 
@@ -68,6 +65,14 @@ class Window:
             model=None,
             learn=False
         )
+
+        self.agent = Agent(
+            board_size=10,
+            sessions_number=1,
+            model_name=None,
+            learn=False
+        )
+
         self.max_len = self.snake.max_snake_length
 
         self.next_direction = None
@@ -78,7 +83,7 @@ class Window:
         self.triangle_buttons = []
 
         self.is_editing_session_num: bool = False
-        self.session_num_display: str = str(self.training.sessions_number)
+        self.session_num_display: str = str(self.agent.sessions_number)
 
     def get_font(self, size: int) -> pygame.font.Font:
         return pygame.font.Font(os.path.join(self.ROOT_PATH, self.font), size)
@@ -99,6 +104,8 @@ class Window:
             win_screen.MENU_computor_training(self)
         elif self.menu == "TRAINING_VISUALIZATION":
             win_screen.RUN_training_visualization(self)
+        elif self.menu == "MODEL_VISUALIZATION":
+            win_screen.RUN_model_visualization(self)
         else:
             print(f"No menu select. '{self.menu}'")
             pass
@@ -110,8 +117,43 @@ class Window:
         self.snake = Snake()
         self.snake.max_snake_length = self.max_len
 
+    def run_settings_vision(self):
+        self.agent = Agent(
+            board_size=10,
+            sessions_number=1,
+            model_name=None,
+            learn=False
+        )
+        self.session_num_display: str = str(self.agent.sessions_number)
+        self.switch_menu("COMPUTOR_VISUALIZATION_SETTINGS")
+
+    def run_settings_training(self):
+        self.agent = Agent(
+            board_size=10,
+            sessions_number=10,
+            model_name=None,
+            learn=True
+        )
+        self.session_num_display: str = str(self.agent.sessions_number)
+        self.switch_menu("COMPUTOR_TRAINING_SETTINGS")
+
     def run_training(self):
+        self.snake = self.agent
         self.switch_menu("TRAINING_VISUALIZATION")
+
+    def run_visualization(self):
+        self.snake = self.agent
+        self.switch_menu("MODEL_VISUALIZATION")
+
+    def handle_agent_training(self):
+        tick = (self.tick * self.speed) % self.FPS
+        last_tick = (self.last_tick * self.speed) % self.FPS
+
+        # if tick < last_tick:
+        #     if self.snake.next_frame(self.next_direction) is False:
+        #         self.handle_gameover()
+        #         self.snake.is_running = False
+        pass
 
     def handle_gameloop(self):
         tick = (self.tick * self.speed) % self.FPS
@@ -162,7 +204,7 @@ class Window:
             self.is_editing_session_num = False
             if self.session_num_display == "...":
                 self.session_num_display = "1"
-            self.training.sessions_number = int(self.session_num_display)
+            self.agent.sessions_number = int(self.session_num_display)
 
         if key == pygame.K_BACKSPACE:
             if self.session_num_display == "...":
@@ -220,6 +262,10 @@ class Window:
 
             if self.menu == "GAME_INTERFACE":
                 self.handle_gameloop()
+
+            if self.menu == "TRAINING_VISUALIZATION":
+                self.handle_agent_training()
+
             win_utils.update_button(self, pygame.mouse.get_pos(), onclick)
 
             pygame.display.flip()
@@ -314,6 +360,12 @@ class Window:
         TILE_X = round(WIDTH / size)
         TILE_Y = round(HEIGHT / size)
 
+        WIDTH = TILE_X * size
+        HEIGHT = TILE_Y * size
+
+        DEFAULT_WIDTH = WIDTH + (2 * BORDER_SIZE)
+        DEFAULT_HEIGHT = HEIGHT + (2 * BORDER_SIZE)
+
         start_x = self.SCREEN_WIDTH / 2 - (WIDTH / 2)
         start_y = self.SCREEN_HEIGHT / 2 - (HEIGHT / 2)
 
@@ -371,7 +423,7 @@ class Window:
 
     def get_model(self):
         # print(f"Calling loop {self.clock}")
-        return str(self.training.model)
+        return str(self.agent.model_name)
 
     def select_model(self):
         # HANDLE MACOS
@@ -388,8 +440,8 @@ class Window:
         # tmp_win.tk.call('tk', 'scaling', 2.0)
         # filename = askopenfilename(title="Select a model")
         filename = askopenfilename(title="Select a model")
-        # print(filename)
-        if filename.isinstance(list) or filename.isinstance(tuple):
+
+        if isinstance(filename, list) or isinstance(filename, tuple):
             if len(filename) > 0:
                 filename = filename[0]
             else:
@@ -401,19 +453,22 @@ class Window:
         if filename == '':
             return
         else:
-            self.training.model = filename
+            self.agent.model_name = filename
+            self.agent.load_model(filename)
 
-    def decrease_board_size(self):
-        if self.training.board_size == 10:
+    def decrease_board_size(self, min_size: int = 10):
+        if self.agent.size <= min_size:
             return
         else:
-            self.training.board_size -= 2
+            self.agent.size -= 2
+        self.agent.new_game()
 
-    def increase_board_size(self):
-        if self.training.board_size == 20:
+    def increase_board_size(self, max_size: int = 20):
+        if self.agent.size >= max_size:
             return
         else:
-            self.training.board_size += 2
+            self.agent.size += 2
+        self.agent.new_game()
 
     def edit_sessions_number(self):
         self.is_editing_session_num = True
@@ -421,5 +476,6 @@ class Window:
 
 
 if __name__ == "__main__":
+    add_path.void()
     window = Window(title="SnakeAI", size=(1000, 800))
     window.launch()
