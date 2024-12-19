@@ -1,6 +1,6 @@
 ########################################
 ########## VARIABLES
-DIRECTORY = srcs tests
+FILES_DIR = main.py srcs tests
 
 ########################################
 ########## COLORS
@@ -24,7 +24,7 @@ all:
 norm:
 		@echo "$(CYAN)########################################"
 		@echo "$(CYAN)######## NORM - Flake8 $(DEF_COLOR)"
-		@python3 -m flake8 $(DIRECTORY)
+		@python3 -m flake8 $(FILES_DIR)
 
 path:
 # export PATH=$$PWD:$$PATH

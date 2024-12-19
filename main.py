@@ -6,56 +6,68 @@ import argparse
 
 
 def main():
-    parser = argparse.ArgumentParser(description="A snake able to learns with reinforcement learning.")
+    parser = argparse.ArgumentParser(
+        description="A reinforcement learning-based snake game where the "
+        "agent learns to improve its performance."
+    )
 
     parser.add_argument(
         '-sessions',
         type=int,
         default=1,
-        help="The numbers of sessions will do for training."
+        help="Number of training sessions to execute. Defaults to 1."
     )
 
     parser.add_argument(
         '-board',
         type=int,
         default=10,
-        help="The size of the board."
+        help="Size of the square board (e.g., 10 for a 10x10 grid). "
+        "Defaults to 10."
     )
 
     parser.add_argument(
         '-speed',
         type=float,
         default=0.1,
-        help="The speed of the snake when visualization is true."
+        help="Speed of the snake in seconds per step when "
+        "visualization is enabled. Defaults to 0.1."
     )
 
     parser.add_argument(
         '-load',
         type=str,
-        help="Load a model from the given file."
+        help="Path to a pre-trained model file to load "
+        "for testing or further training."
     )
 
     parser.add_argument(
         '-save',
         type=str,
-        help="Save the training session of the model in a file (stored in model directory)."
+        help="Path to save the trained model after the "
+        "session. The model will be stored in the specified file."
     )
 
     parser.add_argument(
         '-visual',
         type=str,
         choices=["on", "off"],
-        help="To display the snake vision and action through time."
+        help="Toggle visualization of the snake's actions and "
+        "decision-making process ('on' or 'off')."
     )
+
     parser.add_argument(
         '-dontlearn',
         action='store_false',
-        help="To test the performance of the model."
+        help="Run the game without training to evaluate the "
+        "current model's performance."
     )
+
     parser.add_argument(
         '-step-by-step',
         action='store_true',
-        help="If enabled, you will need to press 'enter' to view the next choice."
+        help="Enable step-by-step mode, requiring the user "
+        "to press 'Enter' to advance each step."
     )
 
     try:
@@ -92,7 +104,8 @@ def main():
         )
         if save_model is not None:
             agent.save_model(save_model)
-        agent.visualization_history(history)
+        if sessions_number > 1:
+            agent.visualization_history(history)
 
     except Exception as e:
         URED = Colors.URED

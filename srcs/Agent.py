@@ -111,6 +111,7 @@ class Agent(Snake):
                 print(Colors.RESET)
                 print(f"{Colors.RED}{e}{Colors.RESET}")
 
+
         print(Colors.BRED, end="")
         value = model.get("session")
         if value is None or not isinstance(value, int):
@@ -137,6 +138,8 @@ class Agent(Snake):
             print(f"'q_table' is not found or not a dictionnary. ({value})")
             model['q_table'] = {}
         print(Colors.RESET, end="")
+
+        time.sleep(3)
         return model
 
     def save_model(self, filename: str = None):
@@ -508,12 +511,13 @@ class Agent(Snake):
                     self.red_apple_eat,
                     movement
                 ))
-                print(Colors.BHWHITE, end="")
-                print(f"Session n°{session + 1}, ", end="")
-                print(f"Total Reward: {total_reward}, ", end="")
-                print(f"Duration: {movement}, ", end="")
-                print(f"Max len: {self.snake_length}", end="")
-                print(Colors.RESET)
+                if visualization is True:
+                    print(Colors.BHWHITE, end="")
+                    print(f"Session n°{session + 1}, ", end="")
+                    print(f"Total Reward: {total_reward}, ", end="")
+                    print(f"Duration: {movement}, ", end="")
+                    print(f"Max len: {self.snake_length}", end="")
+                    print(Colors.RESET)
 
         if self.learn is True:
             self.model["max_length"] = self.max_snake_length

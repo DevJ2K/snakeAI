@@ -1,0 +1,3 @@
+./main.py -sessions 10 -save models/10sess.txt -visual off
+./main.py -visual on -load models/100sess.txt -sessions 10 -dontlearn -step-by-step
+./main.py -visual on -load models/1000sess.txt
