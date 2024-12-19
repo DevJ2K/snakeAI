@@ -56,15 +56,11 @@ class Window:
         self.last_tick = 0
         self.theme = theme.get()
 
-        self.menu = "COMPUTOR_TRAINING_SETTINGS"
+        self.menu = "TRAINING_VISUALIZATION"
+
+        self.computor_vision = False
 
         self.snake = Snake(size=10, snake_length=3)
-        self.training = Training(
-            board_size=10,
-            sessions_number=1,
-            model=None,
-            learn=False
-        )
 
         self.agent = Agent(
             board_size=10,
@@ -76,7 +72,7 @@ class Window:
         self.max_len = self.snake.max_snake_length
 
         self.next_direction = None
-        self.speed = 7
+        self.speed = 2
 
         # Window Interface Handling
         self.buttons = []
@@ -111,6 +107,7 @@ class Window:
             pass
 
     def start_new_snake(self):
+        self.computor_vision = False
         old_max_len = self.snake.max_snake_length
         self.max_len = max(self.max_len, old_max_len)
         self.switch_menu("GAME_INTERFACE")
@@ -137,23 +134,36 @@ class Window:
         self.session_num_display: str = str(self.agent.sessions_number)
         self.switch_menu("COMPUTOR_TRAINING_SETTINGS")
 
-    def run_training(self):
+    def run_computor_visualization(self, window_name: str):
         self.snake = self.agent
-        self.switch_menu("TRAINING_VISUALIZATION")
+        self.agent.w_is_alive = True
+        self.computor_vision = False
+        # VARIABLES USEFUL (w_ == window)
+        self.agent.w_session = 0
+        self.agent.w_session_max_movements = 0
+        self.agent.w_history = []
+        self.agent.w_is_alive = False
+        self.agent.w_epsilon = 1.0
+        self.agent.w_epsilon_decay = 0.995
+        self.agent.w_gamma = 0.99
+        self.agent.w_epsilon_min = 0.01
+        self.switch_menu(window_name)
 
-    def run_visualization(self):
-        self.snake = self.agent
-        self.switch_menu("MODEL_VISUALIZATION")
+
+    def toggle_computor_vision(self):
+        self.computor_vision = not self.computor_vision
 
     def handle_agent_training(self):
+        self.snake = self.agent
         tick = (self.tick * self.speed) % self.FPS
         last_tick = (self.last_tick * self.speed) % self.FPS
 
-        # if tick < last_tick:
-        #     if self.snake.next_frame(self.next_direction) is False:
-        #         self.handle_gameover()
-        #         self.snake.is_running = False
-        pass
+        if tick < last_tick:
+            print("Action")
+            self.agent.run_dynamic_agent(visualization=False)
+            # if self.snake.next_frame(self.next_direction) is False:
+            #     self.handle_gameover()
+            #     self.snake.is_running = False
 
     def handle_gameloop(self):
         tick = (self.tick * self.speed) % self.FPS
@@ -383,7 +393,18 @@ class Window:
                         self.theme[f"board{1 + bg_pattern}"],
                         pygame.Rect(x, y, TILE_X, TILE_Y)
                     )
-                    self.draw_on_board(x, y, TILE_X, TILE_Y, item, bg_pattern)
+                    if self.computor_vision is False:
+                        self.draw_on_board(x, y, TILE_X, TILE_Y, item, bg_pattern)
+                    else:
+                        head_i = self.agent.snake[0].i - 1
+                        head_j = self.agent.snake[0].j - 1
+                        from pprint import pprint
+                        # pprint(self.agent)
+                        if i == head_i or head_j == j:
+                            self.draw_on_board(x, y, TILE_X, TILE_Y, item, bg_pattern)
+                        else:
+                            self.draw_on_board(x, y, TILE_X, TILE_Y, self.snake.HIDE_VISION, bg_pattern)
+                        pass
                     x += TILE_X
                 if size % 2 == 0:
                     bg_pattern = 1 - bg_pattern
@@ -420,6 +441,59 @@ class Window:
         win_utils.add_image(window, "trophy.png", x + 100, y, 32, 32)
         tmp_x = x + 144
         win_utils.add_text(window, str(self.snake.max_snake_length), tmp_x, y)
+
+    def display_current_session(self, font):
+        x = window.SCREEN_WIDTH - 300
+        y = window.SCREEN_HEIGHT / 2 + 40
+
+        win_utils.add_image(window, "len.png", x, y, 48, 32)
+        win_utils.add_text(
+            window,
+            str(self.snake.snake_length),
+            x + 60,
+            y - 4,
+            font=font
+        )
+
+        win_utils.add_image(window, "timer.png", x + 120, y, 32, 32)
+        win_utils.add_text(
+            window,
+            f"{16.75:.2f}s",
+            x + 164,
+            y - 4,
+            font=font
+        )
+
+    def display_best_session(self, font):
+        x = window.SCREEN_WIDTH - 300
+        y = window.SCREEN_HEIGHT / 2 - 90
+
+        win_utils.add_image(window, "trophy.png", x, y, 32, 32)
+        # win_utils.add_image(window, "len.png", x, y, 48, 32)
+        win_utils.add_text(
+            window,
+            str(self.snake.snake_length),
+            x + 44,
+            y - 4,
+            font=font
+        )
+
+        win_utils.add_image(window, "timer.png", x + 120, y, 32, 32)
+        # win_utils.add_image(window, "timer.png", x + 120, y, 32, 32)
+        win_utils.add_text(
+            window,
+            f"{16.75:.2f}s",
+            x + 164,
+            y - 4,
+            font=font
+        )
+
+        # win_utils.add_image(window, "timer.png", x - 40, y, 32, 32)
+        # win_utils.add_text(window, f"{self.snake.get_timer():.2f}s", x + 2, y)
+
+        # win_utils.add_image(window, "trophy.png", x + 100, y, 32, 32)
+        # tmp_x = x + 144
+        # win_utils.add_text(window, str(self.snake.max_snake_length), tmp_x, y)
 
     def get_model(self):
         # print(f"Calling loop {self.clock}")
@@ -477,5 +551,5 @@ class Window:
 
 if __name__ == "__main__":
     add_path.void()
-    window = Window(title="SnakeAI", size=(1000, 800))
+    window = Window(title="SnakeAI", size=(1200, 900))
     window.launch()

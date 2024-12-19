@@ -57,6 +57,12 @@ class Snake:
             'color': Colors.BLACKB,
             'hex': "#AAAAAA"
         }
+        self.HIDE_VISION = {
+            'name': "HIDE_VISION",
+            'char': '*',
+            'color': Colors.YELLOWB,
+            'hex': "#05004d"
+        }
 
         self.UP = (-1, 0)
         self.DOWN = (1, 0)

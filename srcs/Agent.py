@@ -5,6 +5,7 @@ import random
 from srcs.Snake import Snake
 import srcs.utils.Colors as Colors
 import srcs.utils.agent_utils as agent_utils
+from pathlib import Path
 import json
 import time
 import matplotlib.pyplot as plt
@@ -21,10 +22,20 @@ class Agent(Snake):
         super().__init__(board_size)
         self.sessions_number = sessions_number
         self.update_model = learn
-        self.model = self.get_model(model_name)
-        self.display_stats()
+        self.model_name = model_name
+        self.load_model(model_name)
         self.learn = learn
         self.session_over = False
+
+        # WINDOW DEFAULT VALUE
+        self.w_session = 0
+        self.w_session_max_movements = 0
+        self.w_history = []
+        self.w_is_alive = False
+        self.w_epsilon = 1.0
+        self.w_epsilon_decay = 0.995
+        self.w_gamma = 0.99
+        self.w_epsilon_min = 0.01
 
     def __str__(self) -> str:
         return str(self.model)
@@ -41,6 +52,22 @@ class Agent(Snake):
                 if head_i == i or head_j == j:
                     vision_board[i][j] = self.board[i][j]
         return vision_board
+
+    def get_model_name(self, trunc: int = -1) -> str:
+        if self.model_name is None:
+            return "None"
+        path = Path(self.model_name)
+        filename = os.path.basename(path)
+        if trunc == -1:
+            return str(filename)
+        trunc_word = str(filename)[0:trunc]
+        if len(trunc_word) == len(filename):
+            return str(filename)
+        if len(trunc_word) == 0:
+            return "None"
+        if trunc_word[-1] == ".":
+            return trunc_word + ".."
+        return trunc_word + "..."
 
     def display_vision(self, spacing: bool = False):
         board = self.vision()
@@ -88,7 +115,7 @@ class Agent(Snake):
 
     #####################################
     # MODELS
-    def get_model(self, file: str = None) -> dict:
+    def load_model(self, file: str = None):
         model = {
             "session": 0,
             "max_length": 0,
@@ -138,7 +165,8 @@ class Agent(Snake):
             model['q_table'] = {}
         print(Colors.RESET, end="")
 
-        return model
+        self.model = model
+        self.display_stats()
 
     def save_model(self, filename: str = None):
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -400,6 +428,134 @@ class Agent(Snake):
     def new_game(self):
         super().new_game()
         self.session_over = False
+
+    def run_dynamic_agent(
+            self,
+            learning_rate: float = 0.1,
+            visualization: bool = False,
+            ) -> list:
+
+
+        if self.sessions_number <= 0:
+            return
+        history = []
+        session_max_movements = 0
+        # for session in range(self.sessions_number):
+        if self.w_session < self.sessions_number:
+            self.model["session"] += 1
+            self.w_session += 1
+
+            if self.w_is_alive is False:
+                # INIT GAME
+                self.new_game()
+                self.w_movement = 0
+                self.w_total_reward = 0
+                self.w_previous_action = ""
+                self.w_previous_reward = 0
+                self.w_previous_state = ""
+                self.w_type_action = ""
+                self.w_is_alive = True
+
+
+
+            # while True and (self.learn is False or movement < 1500):
+            if self.w_is_alive is True and (self.learn is False or self.w_movement < 1500):
+                state = self.board_state()
+                is_new_state = self.model["q_table"].get(state) is None
+                if is_new_state:
+                    self.model["q_table"][state] = [0, 0, 0, 0]
+
+                if visualization is True:
+                    self.__display_session_vision(
+                        self.w_previous_state,
+                        self.w_previous_action,
+                        self.w_type_action,
+                        self.w_previous_reward,
+                        0
+                    )
+
+                exclude_direction = []
+                actions = self.__get_actions(exclude_direction)
+
+                if self.learn and random.uniform(0, 1) < self.w_epsilon:
+                    # EXPLORATION | Choose a random action
+                    action = random.choice(actions)
+                    self.w_type_action = "EXPLORATION"
+                else:
+                    # EXPLOITATION | Best action of the action in q_table
+                    action = self.__get_exploitable_action(state, actions)
+                    self.w_type_action = "EXPLOITATION"
+
+                for i in range(len(self.directions)):
+                    if self.directions[i] == action:
+                        self.w_previous_action = self.direction_name[i]
+                        break
+                next_state, reward, is_game_over = self.make_action(action)
+                self.w_previous_reward = reward
+                self.w_previous_state = state
+
+                index_action = self.directions.index(action)
+
+                # Update q_table with Q_function
+                if self.learn:
+                    old_value = self.model["q_table"][state][index_action]
+                    if self.model["q_table"].get(next_state) is None:
+                        self.model["q_table"][next_state] = [0, 0, 0, 0]
+                    next_max_value = max(self.model["q_table"][next_state])
+
+                    cur_value = (1 - learning_rate) * old_value
+                    bellman_equation = (reward + self.w_gamma * next_max_value)
+
+                    new_value = cur_value + learning_rate * bellman_equation
+                    self.model["q_table"][state][index_action] = new_value
+
+                self.w_total_reward += reward
+                self.w_movement += 1
+
+                if is_game_over:
+                    self.w_is_alive = False
+                else:
+                    return
+
+            new_max_movement = max(self.model['max_movements'], self.w_movement)
+            self.w_session_max_movements = max(session_max_movements, self.w_movement)
+            self.model['max_movements'] = new_max_movement
+            if self.w_epsilon > self.w_epsilon_min:
+                self.w_epsilon *= self.w_epsilon_decay
+
+            history.append((
+                    self.snake_length,
+                    self.green_apple_eat,
+                    self.red_apple_eat,
+                    self.w_movement
+                ))
+            if self.learn is True:
+                self.model['history'].append((
+                    self.snake_length,
+                    self.green_apple_eat,
+                    self.red_apple_eat,
+                    self.w_movement
+                ))
+            return
+
+        if self.learn is True:
+            self.model["max_length"] = self.max_snake_length
+            self.display_stats()
+        else:
+            if visualization is True:
+                self.__display_session_vision(
+                    self.w_previous_state,
+                    self.w_previous_action,
+                    self.w_type_action,
+                    self.w_previous_reward,
+                    0
+                )
+            self.display_training_session_result(
+                self.w_total_reward,
+                self.w_movement,
+                session_max_movements
+            )
+        return history
 
     def run_agent(
             self,
