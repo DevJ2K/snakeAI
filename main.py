@@ -85,6 +85,10 @@ def main():
         else:
             visualization = False
         learn = args.dontlearn
+        if learn is False:
+            epsilon = 0
+        else:
+            epsilon = 1
         stepbystep = args.step_by_step
         speed = args.speed
 
@@ -97,7 +101,7 @@ def main():
         history = agent.run_agent(
             learning_rate=0.1,
             gamma=0.99,
-            epsilon=1,
+            epsilon=epsilon,
             epsilon_decay=0.995,
             epsilon_min=0.01,
             visualization=visualization,

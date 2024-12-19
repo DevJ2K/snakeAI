@@ -1,3 +1,5 @@
+#!/bin/python3
+
 import srcs.add_path as add_path
 from srcs.Window import Window
 
