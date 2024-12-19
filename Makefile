@@ -1,6 +1,6 @@
 ########################################
 ########## VARIABLES
-FILES_DIR = main.py srcs tests
+FILES_DIR = main.py game.py srcs tests srcs/utils srcs/window
 
 ########################################
 ########## COLORS
@@ -17,28 +17,22 @@ WHITE = \033[1;97m
 ########################################
 ########## RULES
 
-all:
-		python3 main.py
-		echo ALL
+all: test
 
 norm:
 		@echo "$(CYAN)########################################"
 		@echo "$(CYAN)######## NORM - Flake8 $(DEF_COLOR)"
-		@python3 -m flake8 $(FILES_DIR)
-
-path:
-# export PATH=$$PWD:$$PATH
-		chmod +x script.sh && ./script.sh
-# export PATH=$$PWD
+		@python3 -m flake8 $(FILES_DIR) && echo "$(GREEN)SUCCESS $(DEF_COLOR)" || echo "$(RED)FAILURE $(DEF_COLOR)"
 
 pytest:
 		@echo "$(GREEN)########################################"
 		@echo "$(GREEN)######## PYTEST $(DEF_COLOR)"
-		@python3 -m pytest tests/*.py -v
-
-clean:
-		rm -rf __pycache__ tests/__pycache__ srcs/__pycache__ .pytest_cache
+		@python3 -m pytest tests/*.py -v && echo "$(GREEN)SUCCESS $(DEF_COLOR)" || echo "$(RED)FAILURE $(DEF_COLOR)"
 
 test: norm pytest
+
+clean:
+		rm -rf __pycache__ tests/__pycache__ srcs/__pycache__ .pytest_cache srcs/utils/__pycache__ srcs/window/__pycache__
+
 
 .PHONY: all norm pytest test clean

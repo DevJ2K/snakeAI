@@ -225,7 +225,10 @@ class Agent(Snake):
         return self.w_session_start
 
     def get_max_duration(self):
-        new_max_duration = max(self.w_max_session_duration, self.get_session_duration())
+        new_max_duration = max(
+            self.w_max_session_duration,
+            self.get_session_duration()
+        )
         self.w_max_session_duration = new_max_duration
         return self.w_max_session_duration
 
@@ -473,7 +476,6 @@ class Agent(Snake):
             visualization: bool = False,
             ) -> list:
 
-
         if self.sessions_number <= 0:
             return
         if self.w_is_model_use is False:
@@ -494,8 +496,8 @@ class Agent(Snake):
                 self.w_session_start = time.time()
                 self.w_is_alive = True
 
-
-            if self.w_is_alive is True and (self.learn is False or self.w_movement < 1500):
+            condition = self.learn is False or self.w_movement < 1500
+            if self.w_is_alive is True and condition:
                 state = self.board_state()
                 is_new_state = self.model["q_table"].get(state) is None
                 if is_new_state:
@@ -553,7 +555,10 @@ class Agent(Snake):
                 else:
                     return
 
-            new_max_movement = max(self.model['max_movements'], self.w_movement)
+            new_max_movement = max(
+                self.model['max_movements'],
+                self.w_movement
+            )
             self.w_session_max_movements = new_max_movement
             self.model['max_movements'] = new_max_movement
             if self.w_epsilon > self.w_epsilon_min:

@@ -388,9 +388,10 @@ def RUN_model_visualization(window: Window):
     font_subtext = window.get_font(size=30)
 
     if window.agent.w_is_model_use is True:
-        add_text(window, "Press 'left' or 'right' arrow to "
-                    f"change the speed. ({window.speed})",
-                    y=120)
+        add_text(window,
+                 "Press 'left' or 'right' arrow to "
+                 f"change the speed. ({window.speed})",
+                 y=120)
     else:
         if window.agent.w_save_path is not None:
             if window.agent.w_save_path[0] == "success":
@@ -399,8 +400,7 @@ def RUN_model_visualization(window: Window):
             elif window.agent.w_save_path[0] == "failure":
                 add_text(window, f"Failed to save in {file}", y=150)
         else:
-            add_text(window, f"Do you want to save the model?", y=150)
-
+            add_text(window, "Do you want to save the model?", y=150)
 
     add_text(
         window,
@@ -468,7 +468,6 @@ def RUN_model_visualization(window: Window):
         },
         font=font_text
     )
-
 
     add_text(
         window,

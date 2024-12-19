@@ -155,7 +155,6 @@ class Window:
 
         self.switch_menu("MODEL_VISUALIZATION")
 
-
     def toggle_computor_vision(self):
         self.computor_vision = not self.computor_vision
 
@@ -326,8 +325,7 @@ class Window:
             y: int,
             TILE_X: int,
             TILE_Y: int,
-            item: dict,
-            pattern_bool: int = 0
+            item: dict
     ):
 
         if item['name'] in ["HEAD", "SNAKE_BODY"]:
@@ -399,16 +397,15 @@ class Window:
                         pygame.Rect(x, y, TILE_X, TILE_Y)
                     )
                     if self.computor_vision is False:
-                        self.draw_on_board(x, y, TILE_X, TILE_Y, item, bg_pattern)
+                        self.draw_on_board(x, y, TILE_X, TILE_Y, item)
                     else:
                         head_i = self.agent.snake[0].i - 1
                         head_j = self.agent.snake[0].j - 1
-                        from pprint import pprint
-                        # pprint(self.agent)
                         if i == head_i or head_j == j:
-                            self.draw_on_board(x, y, TILE_X, TILE_Y, item, bg_pattern)
+                            self.draw_on_board(x, y, TILE_X, TILE_Y, item)
                         else:
-                            self.draw_on_board(x, y, TILE_X, TILE_Y, self.snake.HIDE_VISION, bg_pattern)
+                            self.draw_on_board(
+                                x, y, TILE_X, TILE_Y, self.snake.HIDE_VISION)
                         pass
                     x += TILE_X
                 if size % 2 == 0:
