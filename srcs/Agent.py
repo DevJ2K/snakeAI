@@ -16,11 +16,9 @@ class Agent(Snake):
             board_size: int = 10,
             sessions_number: int = 3,
             model_name: str = None,
-            learn: bool = True,
-            output_file: str = None
+            learn: bool = True
             ) -> None:
         super().__init__(board_size)
-        self.output_file = output_file
         self.sessions_number = sessions_number
         self.update_model = learn
         self.model = self.get_model(model_name)
@@ -142,11 +140,12 @@ class Agent(Snake):
         return model
 
     def save_model(self, filename: str = None):
-        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        model_dir = os.path.join(root_dir, "models")
         if filename:
-            file = os.path.join(model_dir, filename)
+            file = os.path.abspath(filename)
+            # file = os.path.join(model_dir, filename)
         else:
+            root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            model_dir = os.path.join(root_dir, "models")
             i = 0
             while True:
                 name = ""
@@ -206,7 +205,7 @@ class Agent(Snake):
         axis_len.legend(['Maximum Snake Length'], loc='upper right')
         axis_len.set_title("Maximum Snake Length Across Sessions")
         # axis_len.set_yticks([min(stat_len), max(stat_len) + 1])
-        axis_len.set_ylim(bottom=0)
+        axis_len.set_ylim(bottom=0, top=max(stat_len) + 2)
 
         axis_apple.plot(iteration, stat_ga, c='#16ee3d')
         axis_apple.plot(iteration, stat_ra, c='#ee2016')

@@ -19,44 +19,43 @@ def main():
         '-board',
         type=int,
         default=10,
-        help="The numbers of sessions will do for training."
+        help="The size of the board."
     )
 
     parser.add_argument(
         '-speed',
         type=float,
         default=0.1,
-        help="The numbers of sessions will do for training."
+        help="The speed of the snake when visualization is true."
     )
 
     parser.add_argument(
         '-load',
         type=str,
-        # default=None
-        help="If enabled, displays the detailed steps taken during the prediction process."
+        help="Load a model from the given file."
     )
 
     parser.add_argument(
         '-save',
         type=str,
-        help="If enabled, displays the detailed steps taken during the prediction process."
+        help="Save the training session of the model in a file (stored in model directory)."
     )
 
     parser.add_argument(
         '-visual',
         type=str,
         choices=["on", "off"],
-        help="If enabled, displays the detailed steps taken during the prediction process."
+        help="To display the snake vision and action through time."
     )
     parser.add_argument(
         '-dontlearn',
         action='store_false',
-        help="If enabled, displays the detailed steps taken during the prediction process."
+        help="To test the performance of the model."
     )
     parser.add_argument(
         '-step-by-step',
         action='store_true',
-        help="If enabled, visualizes the prediction results with a graph."
+        help="If enabled, you will need to press 'enter' to view the next choice."
     )
 
     try:
@@ -79,11 +78,9 @@ def main():
             board_size=board_size,
             sessions_number=sessions_number,
             model_name=load_model,
-            learn=learn,
-            output_file=save_model
+            learn=learn
         )
-
-        agent.run_agent(
+        history = agent.run_agent(
             learning_rate=0.1,
             gamma=0.99,
             epsilon=1,
@@ -93,6 +90,9 @@ def main():
             speed=speed,
             step_by_step=stepbystep
         )
+        if save_model is not None:
+            agent.save_model(save_model)
+        agent.visualization_history(history)
 
     except Exception as e:
         URED = Colors.URED
