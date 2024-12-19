@@ -427,11 +427,13 @@ class Agent(Snake):
             previous_action,
             type_action,
             previous_reward,
-            waiting_time: float = 0.8
+            waiting_time: float = 0.8,
+            clear: bool = True
     ):
         if previous_action == "":
             return
-        os.system('clear')
+        if clear:
+            os.system('clear')
         print(Colors.BHWHITE, end="Previous State: ")
         print(f"{Colors.BHYELLOW}{state}", end="")
         print(Colors.BHWHITE, end=" | Current State: ")
@@ -480,8 +482,6 @@ class Agent(Snake):
             return
         if self.w_is_model_use is False:
             return
-        history = []
-        session_max_movements = 0
         # for session in range(self.sessions_number):
         if self.w_session < self.sessions_number:
             if self.w_is_alive is False:
@@ -564,7 +564,7 @@ class Agent(Snake):
             if self.w_epsilon > self.w_epsilon_min:
                 self.w_epsilon *= self.w_epsilon_decay
 
-            history.append((
+            self.w_history.append((
                     self.snake_length,
                     self.green_apple_eat,
                     self.red_apple_eat,
@@ -602,9 +602,9 @@ class Agent(Snake):
                 self.display_training_session_result(
                     self.w_total_reward,
                     self.w_movement,
-                    session_max_movements
+                    self.w_session_max_movements
                 )
-        return history
+        return self.w_history
 
     def run_agent(
             self,
@@ -633,13 +633,15 @@ class Agent(Snake):
             previous_state = ""
             type_action = ""
 
-            while True and (self.learn is False or movement < 1500):
+            condition1 = (self.learn is False and movement < 2000)
+            condition2 = (self.learn is True and movement < 1500)
+            while True and (condition1 or condition2):
                 state = self.board_state()
                 is_new_state = self.model["q_table"].get(state) is None
                 if is_new_state:
                     self.model["q_table"][state] = [0, 0, 0, 0]
 
-                if visualization is True:
+                if visualization is True and self.learn is False:
                     self.__display_session_vision(
                         previous_state,
                         previous_action,
@@ -654,6 +656,8 @@ class Agent(Snake):
                 # exclude_direction = [opposite_direction]
                 exclude_direction = []
                 actions = self.__get_actions(exclude_direction)
+
+                # session_condition = session < self.sessions_number - self.sessions_number / 3
 
                 if self.learn and random.uniform(0, 1) < epsilon:
                     # EXPLORATION | Choose a random action
@@ -721,8 +725,25 @@ class Agent(Snake):
                     print(f"Duration: {movement}, ", end="")
                     print(f"Max len: {self.snake_length}", end="")
                     print(Colors.RESET)
+            else:
+                if visualization is False:
+                    print(Colors.BHWHITE, end="")
+                    print(f"Session n°{session + 1}, ", end="")
+                    print(f"Total Reward: {total_reward}, ", end="")
+                    print(f"Duration: {movement}, ", end="")
+                    print(f"Max len: {self.snake_length}", end="")
+                    print(Colors.RESET)
 
         if self.learn is True:
+            if visualization is True:
+                self.__display_session_vision(
+                    previous_state,
+                    previous_action,
+                    type_action,
+                    previous_reward,
+                    speed,
+                    False
+                )
             self.model["max_length"] = self.max_snake_length
             self.display_stats()
         else:
