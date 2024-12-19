@@ -56,7 +56,7 @@ class Window:
         self.last_tick = 0
         self.theme = theme.get()
 
-        self.menu = "COMPUTOR_TRAINING_SETTINGS"
+        self.menu = "MAIN"
 
         self.computor_vision = False
 
