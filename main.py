@@ -107,7 +107,12 @@ def main():
         )
 
         if args.graph_only is True:
-            agent.visualization_history()
+            if len(agent.model['history']) > 0:
+                agent.visualization_history()
+            else:
+                BHYELLOW = Colors.BHYELLOW
+                RESET = Colors.RESET
+                print(f"{BHYELLOW}This model has no history...{RESET}")
             return
         history = agent.run_agent(
             learning_rate=0.1,
