@@ -72,6 +72,13 @@ def main():
         "to press 'Enter' to advance each step."
     )
 
+    parser.add_argument(
+        '-graph-only',
+        action='store_true',
+        help="Display only the training statistics of the "
+        "model in a graph without running."
+    )
+
     try:
         args = parser.parse_args()
 
@@ -98,11 +105,15 @@ def main():
             model_name=load_model,
             learn=learn
         )
+
+        if args.graph_only is True:
+            agent.visualization_history()
+            return
         history = agent.run_agent(
             learning_rate=0.1,
             gamma=0.99,
             epsilon=epsilon,
-            epsilon_decay=0.995,
+            epsilon_decay=0.99,
             epsilon_min=0.01,
             visualization=visualization,
             speed=speed,

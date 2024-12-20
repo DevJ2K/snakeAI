@@ -660,8 +660,6 @@ class Agent(Snake):
                 exclude_direction = []
                 actions = self.__get_actions(exclude_direction)
 
-                # session_condition = session < self.sessions_number - self.sessions_number / 3
-
                 if self.learn and random.uniform(0, 1) < epsilon:
                     # EXPLORATION | Choose a random action
                     action = random.choice(actions)
