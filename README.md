@@ -159,7 +159,7 @@ Ensure you have Python 3.9 or newer. Download the latest version of Python from 
 
 #### Expected Output
 
-<!-- <img src="./gitimages/main_menu.png" alt="Project Overview" width="80%"> -->
+<img src="./gitimages/main_menu.png" alt="Project Overview" width="80%">
 
 ### Use the CLI
 
